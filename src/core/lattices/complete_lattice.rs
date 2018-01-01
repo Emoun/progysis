@@ -1,27 +1,33 @@
 use super::*;
 
 ///
-/// Represents the abstract idea of a Complete Lattice.
+/// A [Complete Lattice].
 ///
-/// Types implementing this trait represent the Complete Lattice, while instances
+/// Types implementing this trait represent the [Complete Lattice], while instances
 /// of the type are element of the lattice.
 ///
-/// The trait specifies a set of methods related to all Complete Lattices.
-/// Additionally, trait requires `PartialOrd`, meaning `<=` can be used to compare
-/// two elements of a Complete Lattice.
+/// The trait specifies a set of methods related to all [Complete Lattice]s.
+/// Additionally, the trait requires [`PartialOrd`], meaning `<=` can be used to compare
+/// two elements of a [Complete Lattice].
 ///
+/// [Complete Lattice]: http://mathworld.wolfram.com/CompleteLattice.html
+/// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 ///
 pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Clone
 {
-	type Element;
-	
 	///
-	/// Returns the bottom (least) element of the Complete Lattice
+	/// The type of the elements of the [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html)
+	///
+	type Element;
+
+	///
+	/// Returns the bottom (Greatest Lower Bound) element of the
+	/// [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
 	///
 	fn bottom() -> Self;
 	
 	///
-	/// Returns whether this instance is the bottom element of the Complete Lattice.
+	/// Whether this instance is the bottom element of the [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
 	///
 	fn is_bottom(&self) -> bool;
 	
