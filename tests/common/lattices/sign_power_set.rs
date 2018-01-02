@@ -67,9 +67,16 @@ fn comparison_test(){
 	assert!(minus < minus_zero);
 	assert!(zero < plus_zero);
 	assert!(zero < minus_zero);
-	assert!(!(plus < minus_zero));
-	assert!(!(minus < plus_zero));
-	assert!(!(zero < plus_minus));
+	
+	assert!(!plus.comparable_to(&minus));
+	assert!(!plus.comparable_to(&zero));
+	assert!(!plus.comparable_to(&minus_zero));
+	assert!(!minus.comparable_to(&zero));
+	assert!(!minus.comparable_to(&plus_zero));
+	assert!(!zero.comparable_to(&plus_minus));
+	assert!(!plus_minus.comparable_to(&plus_zero));
+	assert!(!plus_minus.comparable_to(&minus_zero));
+	assert!(!plus_zero.comparable_to(&minus_zero));
 }
 
 #[test]
