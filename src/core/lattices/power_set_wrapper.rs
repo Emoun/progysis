@@ -1,11 +1,12 @@
 use super::*;
 
 use std::cmp::Ordering;
+use std::ops::Add;
 use std::iter::FromIterator;
 
 use ::core::{CompleteLattice,Evaluable};
 
-pub trait PowerSetInner: Clone
+pub trait PowerSetInner: Add<Output=Self> + Clone
 {
 	type Item: PowerSetItem;
 	type All: IntoIterator<Item=Self::Item>;
@@ -13,8 +14,6 @@ pub trait PowerSetInner: Clone
 	fn empty() -> Self;
 	
 	fn singleton(s: Self::Item) -> Self;
-	
-	fn join(&self, other: &Self)-> Self;
 	
 	fn all(&self) -> Self::All;
 }
@@ -53,10 +52,6 @@ impl<T> CompleteLattice for PowerSetWrapper<T>
 	
 	fn is_bottom(&self) -> bool{
 		self.inner.all().into_iter().count() == 0
-	}
-	
-	fn join(&self, other: &Evaluable<Value=Self>) -> Self{
-		Self{inner: self.inner.join(&other.evaluate().inner)}
 	}
 }
 
@@ -107,7 +102,7 @@ impl<T> FromIterator<T::Item> for PowerSetWrapper<T>
 		iter.into_iter().fold(
 			PowerSetWrapper::bottom(),
 			|result, next|
-				result.join(&PowerSetWrapper::singleton(next))
+				result + PowerSetWrapper::singleton(next)
 		)
 	}
 }
@@ -122,6 +117,19 @@ impl<F,T> From<F> for PowerSetWrapper<T>
 	}
 }
 
+impl<T,V> Add<V> for PowerSetWrapper<T>
+	where
+		T: PowerSetInner,
+		V: Evaluable<Value=Self>
+{
+	type Output = Self;
+	
+	fn add(self, rhs: V) -> Self::Output
+	{
+		let other = rhs.evaluate();
+		Self{inner: self.inner + other.inner}
+	}
+}
 
 pub fn iter_subset<T>(subset: &T, superset: &T) -> bool
 	where

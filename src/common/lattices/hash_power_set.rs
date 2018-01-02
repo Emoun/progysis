@@ -1,8 +1,9 @@
 use super::*;
 
+use std::ops::Add;
 use std::collections::HashSet;
 use std::hash::Hash;
-use ::core::{PowerSetItem, PowerSetWrapper, PowerSetInner};
+use ::core::{PowerSetItem, PowerSetWrapper, PowerSetInner, Evaluable};
 
 trait_alias!{HashPowerSetItem: PowerSetItem, Hash}
 
@@ -33,11 +34,19 @@ impl<E> PowerSetInner for HashPowerSetInner<E>
 		Self{set}
 	}
 	
-	fn join(&self, other: &Self)-> Self{
-		Self{set: self.set.union(&other.set).cloned().collect()}
-	}
-	
 	fn all(&self) -> Self::All{
 		self.set.clone()
+	}
+}
+
+impl<E> Add for HashPowerSetInner<E>
+	where
+		E: HashPowerSetItem
+{
+	type Output = Self;
+	
+	fn add(self, rhs: Self) -> Self::Output
+	{
+		Self{set: self.set.union(&rhs.set).cloned().collect()}
 	}
 }
