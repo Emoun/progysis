@@ -7,12 +7,12 @@ use ::core::{CompleteLattice,Evaluable};
 
 pub trait PowerSetInner: Clone
 {
-	type Element: PowerSetElement;
-	type All: IntoIterator<Item=Self::Element>;
+	type Item: PowerSetItem;
+	type All: IntoIterator<Item=Self::Item>;
 	
 	fn empty() -> Self;
 	
-	fn singleton(s: Self::Element) -> Self;
+	fn singleton(s: Self::Item) -> Self;
 	
 	fn join(&self, other: &Self)-> Self;
 	
@@ -24,16 +24,17 @@ pub struct PowerSetWrapper<T>
 	where
 		T: PowerSetInner
 {
-	pub inner: T
+	inner: T
 }
 
 impl<T> PowerSet for PowerSetWrapper<T>
 	where
 		T: PowerSetInner
 {
+	type Item= T::Item;
 	type All = T::All;
 	
-	fn singleton(s: Self::Element) -> Self{
+	fn singleton(s: Self::Item) -> Self{
 		Self{inner: T::singleton(s)}
 	}
 	
@@ -46,8 +47,6 @@ impl<T> CompleteLattice for PowerSetWrapper<T>
 	where
 		T: PowerSetInner
 {
-	type Element = T::Element;
-	
 	fn bottom() -> Self{
 		Self{inner: T::empty()}
 	}
@@ -98,12 +97,12 @@ impl<T> PartialOrd for PowerSetWrapper<T>
 	}
 }
 
-impl<T> FromIterator<T::Element> for PowerSetWrapper<T>
+impl<T> FromIterator<T::Item> for PowerSetWrapper<T>
 	where
 		T: PowerSetInner
 {
 	fn from_iter<I>(iter: I) -> Self
-		where I: IntoIterator<Item=T::Element>
+		where I: IntoIterator<Item=T::Item>
 	{
 		iter.into_iter().fold(
 			PowerSetWrapper::bottom(),
@@ -115,7 +114,7 @@ impl<T> FromIterator<T::Element> for PowerSetWrapper<T>
 
 impl<F,T> From<F> for PowerSetWrapper<T>
 	where
-		F: IntoIterator<Item=T::Element>,
+		F: IntoIterator<Item=T::Item>,
 		T: PowerSetInner
 {
 	fn from(i: F) -> Self{

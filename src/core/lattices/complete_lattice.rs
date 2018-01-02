@@ -16,11 +16,6 @@ use super::*;
 pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Clone
 {
 	///
-	/// The type of the elements of the [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html)
-	///
-	type Element;
-
-	///
 	/// Returns the bottom (Greatest Lower Bound) element of the
 	/// [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
 	///
@@ -41,9 +36,9 @@ pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Clone
 	fn join(&self, &Evaluable<Value=Self>) -> Self;
 }
 
-impl<E,T> Evaluable for T
+impl<T> Evaluable for T
 	where
-	T: CompleteLattice<Element=E>
+	T: CompleteLattice
 {
 	type Value = Self;
 	
