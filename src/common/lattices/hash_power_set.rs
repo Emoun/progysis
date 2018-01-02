@@ -1,6 +1,7 @@
 use super::*;
 
 use std::ops::Add;
+use std::fmt::{Debug, Formatter, Error};
 use std::collections::HashSet;
 use std::hash::Hash;
 use ::core::{PowerSetItem, PowerSetWrapper, PowerSetInner, Evaluable};
@@ -9,12 +10,25 @@ trait_alias!{HashPowerSetItem: PowerSetItem, Hash}
 
 pub type HashPowerSet<V> = PowerSetWrapper<HashPowerSetInner<V>>;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct HashPowerSetInner<E>
 	where
 		E: HashPowerSetItem
 {
 	pub set: HashSet<E>
+}
+
+impl<E> Debug for HashPowerSetInner<E>
+	where
+		E: HashPowerSetItem + Debug
+{
+	fn fmt(&self, f:&mut Formatter) -> Result<(),Error>{
+		match f.write_str("HashPowerSet") {
+			Ok(_) => self.set.fmt(f),
+			Err(r) => Err(r)
+		}
+		
+	}
 }
 
 impl<E> PowerSetInner for HashPowerSetInner<E>

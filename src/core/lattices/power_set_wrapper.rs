@@ -2,6 +2,7 @@ use super::*;
 
 use std::cmp::Ordering;
 use std::ops::Add;
+use std::fmt::{Debug, Formatter, Error};
 use std::iter::FromIterator;
 
 use ::core::{CompleteLattice,Evaluable};
@@ -18,12 +19,21 @@ pub trait PowerSetInner: Add<Output=Self> + Clone
 	fn all(&self) -> Self::All;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PowerSetWrapper<T>
 	where
 		T: PowerSetInner
 {
 	inner: T
+}
+
+impl<T> Debug for PowerSetWrapper<T>
+	where
+		T: PowerSetInner + Debug
+{
+	fn fmt(&self, f:&mut Formatter) -> Result<(),Error>{
+		self.inner.fmt(f)
+	}
 }
 
 impl<T> PowerSet for PowerSetWrapper<T>
