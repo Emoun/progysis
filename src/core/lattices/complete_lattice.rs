@@ -31,7 +31,8 @@ pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Add<Output=Self>
 	fn bottom() -> Self;
 	
 	///
-	/// Whether this instance is the bottom element of the [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
+	/// Whether this instance is the bottom element of the
+	/// [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
 	///
 	fn is_bottom(&self) -> bool;
 	

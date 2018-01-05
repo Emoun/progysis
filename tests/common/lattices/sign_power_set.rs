@@ -16,7 +16,7 @@ pub enum Sign{
 	Minus
 }
 
-type SignPowerSet = HashPowerSet<Sign>;
+pub type SignPowerSet = HashPowerSet<Sign>;
 
 
 #[test]
