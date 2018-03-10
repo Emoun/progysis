@@ -1,6 +1,6 @@
 use super::*;
 
-use std::ops::{Add, Index};
+use std::ops::{Add, AddAssign, Index};
 use std::cmp::Ordering;
 use std::marker::PhantomData;
 
@@ -46,6 +46,18 @@ impl<'a,K,E,T,R> Add<R> for TFSpaceWrapper<'a,K,E,T>
 	fn add(self, other: R) -> Self::Output
 	{
 		Self{inner: self.inner + other.evaluate().inner, k: PhantomData, e: PhantomData}
+	}
+}
+
+impl<'a,K,E,T> AddAssign for TFSpaceWrapper<'a,K,E,T>
+	where
+		T: TFSpaceInner<'a,K,E> + AddAssign,
+		K: 'a + TFSpaceInnerKey,
+		E: 'a + TFSpaceInnerElement,
+{
+	fn add_assign(&mut self, other: TFSpaceWrapper<'a,K,E,T>)
+	{
+		self.inner += other.inner;
 	}
 }
 
@@ -133,8 +145,6 @@ impl<'a,K,E,T> PartialOrd for TFSpaceWrapper<'a,K,E,T>
 					  |s_e, o_e| s_e >= o_e)
 	}
 }
-
-
 
 impl<'a,K,E,T>  CompleteLattice for TFSpaceWrapper<'a,K,E,T>
 	where

@@ -2,7 +2,7 @@ use super::*;
 
 use std::collections::{HashMap,HashSet};
 use std::hash::Hash;
-use std::ops::{Add, Index};
+use std::ops::{Add, Index, AddAssign};
 use std::iter::Cloned;
 use std::collections::hash_set::IntoIter;
 use std::marker::PhantomData;
@@ -42,6 +42,29 @@ impl<'a,K,E> Add for HashTFSpaceInner<'a,K,E>
 			&self[key];
 		}
 		Self{map: result, a:PhantomData}
+	}
+}
+
+impl<'a,K,E> AddAssign for HashTFSpaceInner<'a,K,E>
+	where
+		K: 'a + HashTFSpaceKey,
+		E: 'a + HashTFSpaceElement,
+{
+	fn add_assign(&mut self, other: HashTFSpaceInner<'a,K,E>)
+	{
+		let self_keys = self.keys().collect::<Vec<_>>();
+		//Join all the common keys' values
+		let common_keys = self_keys.iter().filter(|key| other.map.contains_key(key));
+		for &k in common_keys {
+			let new_val =  self[k].clone() + other[k].clone();
+			self.map.insert(k, new_val);
+		}
+		
+		//Add all the values of the keys in other which are not in self
+		let other_keys = other.keys().filter(|key| !self_keys.contains(key));
+		for k in other_keys{
+			self.map.insert(k, other[k].clone());
+		}
 	}
 }
 

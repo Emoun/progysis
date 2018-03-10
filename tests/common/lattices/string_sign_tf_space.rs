@@ -41,3 +41,14 @@ fn add_test(){
 	let f3 = f1 + f2;
 	assert_eq!( f3["v1"], SignPowerSet::singleton(Sign::Zero), "\nf3: {:?}", f3);
 }
+
+#[test]
+fn add_assign_test(){
+	let mut f1 = StringSignTFSpace::bottom();
+	let mut f2 = StringSignTFSpace::bottom();
+	f1.add_key("v1");
+	f2.add_key_with("v1", SignPowerSet::singleton(Sign::Zero));
+	let f3 = f1.clone() + f2.clone();
+	f1 += f2;
+	assert_eq!( f3, f1, "{:?} != {:?}", f3, f1);
+}
