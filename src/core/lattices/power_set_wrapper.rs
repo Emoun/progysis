@@ -1,13 +1,13 @@
 use super::*;
 
 use std::cmp::Ordering;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 use std::fmt::{Debug, Formatter, Error};
 use std::iter::FromIterator;
 
 use ::core::{CompleteLattice,Evaluable};
 
-pub trait PowerSetInner: Add<Output=Self> + Clone
+pub trait PowerSetInner: AddAssign + Clone
 {
 	type Item: PowerSetItem;
 	type All: IntoIterator<Item=Self::Item>;
@@ -134,10 +134,20 @@ impl<T,V> Add<V> for PowerSetWrapper<T>
 {
 	type Output = Self;
 	
-	fn add(self, rhs: V) -> Self::Output
+	fn add(mut self, rhs: V) -> Self::Output
 	{
-		let other = rhs.evaluate();
-		Self{inner: self.inner + other.inner}
+		self.inner += rhs.evaluate().inner;
+		self
+	}
+}
+
+impl<T> AddAssign for PowerSetWrapper<T>
+	where
+		T: PowerSetInner,
+{
+	fn add_assign(&mut self, other: PowerSetWrapper<T>)
+	{
+		self.inner += other.inner;
 	}
 }
 

@@ -130,3 +130,84 @@ fn addition_test(){
 	assert_eq!(zero.clone() + plus_zero.clone(),  plus_zero.clone());
 	assert_eq!(zero.clone() + minus_zero.clone(),  minus_zero.clone());
 }
+
+///
+/// Expands
+///
+/// `e1, e2 => e3`
+///
+/// to:
+///
+/// ```
+/// let mut v = e1;
+/// v += e2;
+/// assert_eq!(v, e3)
+/// ```
+///
+///
+macro_rules! addAssign_equals {
+	{
+		$root:expr , $add:expr => $equals:expr
+	} => {
+		let mut root = $root;
+		root += $add;
+		assert_eq!(root, $equals);
+	}
+}
+
+#[test]
+fn addAssign_test()
+{
+	let empty = SignPowerSet::bottom();
+	let plus = SignPowerSet::singleton(Plus);
+	let zero = SignPowerSet::singleton(Zero);
+	let minus = SignPowerSet::singleton(Minus);
+	let plus_minus = SignPowerSet::from(vec![Plus, Minus]);
+	let plus_zero = SignPowerSet::from(vec![Plus, Zero]);
+	let minus_zero = SignPowerSet::from(vec![Minus, Zero]);
+	let plus_minus_zero = SignPowerSet::from(vec![Plus, Minus, Zero]);
+	let all = vec![empty.clone(), plus.clone(), zero.clone(), minus.clone(), plus_minus.clone(), plus_zero.clone(), minus_zero.clone(), plus_minus_zero.clone()];
+	
+	// Adding an element to itself does not change it.
+	for e in all.clone() {
+		let mut new_e = e.clone();
+		new_e += e.clone();
+		assert!(new_e == e.clone(), "{:?} != {:?}",new_e, e);
+	}
+	
+	// Adding the empty element to any other element, results in the other element
+	for (i,e) in all.clone().into_iter().enumerate(){
+		if i>0 {
+			let mut new_empty = empty.clone();
+			new_empty += e.clone();
+			assert!(new_empty == e, "({:?} += {:?}) != {:?}",new_empty, e, e);
+		}
+	}
+	
+	// Adding the top element to any other element, results in the top element
+	for (i,e) in all.clone().into_iter().enumerate(){
+		if i < (all.len()-1) {
+			let mut new_top = plus_minus_zero.clone();
+			new_top += e.clone();
+			assert!(new_top == plus_minus_zero.clone(), "({:?} += {:?}) != {:?}",new_top, e, plus_minus_zero);
+		}
+	}
+	
+	addAssign_equals!(plus.clone(), minus.clone() => plus_minus.clone());
+	addAssign_equals!(plus.clone(), zero.clone() => plus_zero.clone());
+	addAssign_equals!(plus.clone(), plus_minus.clone() => plus_minus.clone());
+	addAssign_equals!(plus.clone(), plus_zero.clone() => plus_zero.clone());
+	addAssign_equals!(plus.clone(), minus_zero.clone() => plus_minus_zero.clone());
+	
+	addAssign_equals!(minus.clone(), plus.clone() => plus_minus.clone());
+	addAssign_equals!(minus.clone(), zero.clone() => minus_zero.clone());
+	addAssign_equals!(minus.clone(), plus_minus.clone() => plus_minus.clone());
+	addAssign_equals!(minus.clone(), plus_zero.clone() => plus_minus_zero.clone());
+	addAssign_equals!(minus.clone(), minus_zero.clone() => minus_zero.clone());
+	
+	addAssign_equals!(zero.clone(), plus.clone() => plus_zero.clone());
+	addAssign_equals!(zero.clone(), minus.clone() => minus_zero.clone());
+	addAssign_equals!(zero.clone(), plus_minus.clone() => plus_minus_zero.clone());
+	addAssign_equals!(zero.clone(), plus_zero.clone() => plus_zero.clone());
+	addAssign_equals!(zero.clone(), minus_zero.clone() => minus_zero.clone());
+}

@@ -1,6 +1,6 @@
 use super::*;
 
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 use std::fmt::{Debug, Formatter, Error};
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -53,14 +53,16 @@ impl<E> PowerSetInner for HashPowerSetInner<E>
 	}
 }
 
-impl<E> Add for HashPowerSetInner<E>
+impl<E> AddAssign for HashPowerSetInner<E>
 	where
 		E: HashPowerSetItem
 {
-	type Output = Self;
-	
-	fn add(self, rhs: Self) -> Self::Output
+	fn add_assign(&mut self, other: HashPowerSetInner<E>)
 	{
-		Self{set: self.set.union(&rhs.set).cloned().collect()}
+		for e in other.set.iter(){
+			if !self.set.contains(e) {
+				self.set.insert(e.clone());
+			}
+		}
 	}
 }
