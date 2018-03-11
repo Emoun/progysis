@@ -25,26 +25,6 @@ pub struct HashTFSpaceInner<'a,K,E>
 	a: PhantomData<&'a i8>
 }
 
-impl<'a,K,E> Add for HashTFSpaceInner<'a,K,E>
-	where
-		K: 'a + HashTFSpaceKey,
-		E: 'a + HashTFSpaceElement,
-{
-	type Output = Self;
-	
-	fn add(mut self, other: Self) -> Self::Output
-	{
-		let mut result = HashMap::new();
-		for key in self.keys() {
-			result.insert(key, self[key].clone() + other[key].clone());
-		}
-		for key in other.keys(){
-			&self[key];
-		}
-		Self{map: result, a:PhantomData}
-	}
-}
-
 impl<'a,K,E> AddAssign for HashTFSpaceInner<'a,K,E>
 	where
 		K: 'a + HashTFSpaceKey,

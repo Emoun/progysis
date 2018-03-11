@@ -1,6 +1,6 @@
 use super::*;
 
-use std::ops::{Index};
+use std::ops::{AddAssign, Index};
 
 ///
 /// A Total Function Space that maps keys to [`CompleteLattice`] elements.
@@ -12,7 +12,7 @@ use std::ops::{Index};
 /// * Given two [`TFSpace`]s, f1 and f2, and `f3 = f1 + f2`
 /// then `f1[s] <= f3[s]` and `f2[s] <= f3[s]` for all keys `s`.
 ///
-pub trait TFSpace<'a,K,E>: CompleteLattice + Index<K, Output=E>
+pub trait TFSpace<'a,K,E>: CompleteLattice + AddAssign + Index<K, Output=E>
 	where
 		K: Copy + Eq,
 		E: 'a + CompleteLattice

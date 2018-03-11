@@ -8,7 +8,7 @@ trait_alias!(TFSpaceInnerKey: Copy, Eq, Clone);
 trait_alias!(TFSpaceInnerElement: CompleteLattice);
 
 
-pub trait TFSpaceInner<'a,K,E>: Add<Output=Self> + Index<K, Output=E> + Clone
+pub trait TFSpaceInner<'a,K,E>: AddAssign + Index<K, Output=E> + Clone
 	where
 		K: 'a + TFSpaceInnerKey,
 		E: 'a + TFSpaceInnerElement,
@@ -43,15 +43,16 @@ impl<'a,K,E,T,R> Add<R> for TFSpaceWrapper<'a,K,E,T>
 {
 	type Output = Self;
 	
-	fn add(self, other: R) -> Self::Output
+	fn add(mut self, other: R) -> Self::Output
 	{
-		Self{inner: self.inner + other.evaluate().inner, k: PhantomData, e: PhantomData}
+		self.inner += other.evaluate().inner;
+		self
 	}
 }
 
 impl<'a,K,E,T> AddAssign for TFSpaceWrapper<'a,K,E,T>
 	where
-		T: TFSpaceInner<'a,K,E> + AddAssign,
+		T: TFSpaceInner<'a,K,E>,
 		K: 'a + TFSpaceInnerKey,
 		E: 'a + TFSpaceInnerElement,
 {
