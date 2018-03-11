@@ -1,6 +1,6 @@
 use super::*;
 
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 ///
 /// A [Complete Lattice].
@@ -22,7 +22,7 @@ use std::ops::Add;
 /// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 /// [`Add`]: https://doc.rust-lang.org/std/ops/trait.Add.html
 ///
-pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Add<Output=Self> + Clone
+pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Add<Output=Self> + AddAssign + Clone
 {
 	///
 	/// Returns the bottom (Greatest Lower Bound) element of the
