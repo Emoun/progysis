@@ -1,6 +1,7 @@
 use super::*;
 
 use std::ops::{Add, AddAssign};
+use std::cmp::Ordering;
 
 ///
 /// A [Complete Lattice].
@@ -22,7 +23,7 @@ use std::ops::{Add, AddAssign};
 /// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 /// [`Add`]: https://doc.rust-lang.org/std/ops/trait.Add.html
 ///
-pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Add<Output=Self> + AddAssign + Clone
+pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + AddAssign + Clone
 {
 	///
 	/// Returns the bottom (Greatest Lower Bound) element of the
@@ -46,7 +47,16 @@ pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + Add<Output=Self>
 			T: Evaluable<Value=Self>
 	{
 		let o = other.evaluate();
-		(self <= &o) || (self > &o)
+		(self <= &o.inner) || (self > &o.inner)
+	}
+	
+	///
+	/// Default implementation of Add
+	///
+	fn add(mut self, rhs: Self) -> CompleteLatticeStruct<Self>
+	{
+		self += rhs;
+		CompleteLatticeStruct::new(self)
 	}
 }
 
@@ -56,7 +66,69 @@ impl<T> Evaluable for T
 {
 	type Value = Self;
 	
-	fn evaluate(&self) -> Self::Value{
+	fn evaluate(&self) -> CompleteLatticeStruct<Self::Value>{
+		return CompleteLatticeStruct::new(self.clone());
+	}
+}
+
+#[derive(Clone)]
+pub struct CompleteLatticeStruct<T>
+	where
+		T: CompleteLattice
+{
+	inner: T
+}
+
+impl<T> CompleteLatticeStruct<T>
+	where
+		T: CompleteLattice
+{
+	pub fn new(inner: T) -> CompleteLatticeStruct<T>
+	{
+		CompleteLatticeStruct{inner}
+	}
+}
+
+impl<T> Evaluable for CompleteLatticeStruct<T>
+	where
+		T: CompleteLattice
+{
+	type Value = T;
+	
+	fn evaluate(&self) -> CompleteLatticeStruct<T>{
 		return self.clone();
+	}
+}
+
+impl<T> PartialEq for CompleteLatticeStruct<T>
+	where
+		T: CompleteLattice
+{
+	fn eq(&self, other:&Self) -> bool
+	{
+		self.inner == other.inner
+	}
+}
+
+impl<T> PartialOrd for CompleteLatticeStruct<T>
+	where
+		T: CompleteLattice
+{
+	fn partial_cmp(&self, other:&Self) -> Option<Ordering>
+	{
+		self.inner.partial_cmp(&other.inner)
+	}
+}
+
+impl<T,R> Add<R> for CompleteLatticeStruct<T>
+	where
+		T: CompleteLattice,
+		R: Evaluable<Value=T>
+{
+	type Output = Self;
+	
+	fn add(self, rhs: R) -> Self::Output
+	{
+		self.inner.add(rhs.evaluate().inner)
 	}
 }

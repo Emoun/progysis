@@ -7,6 +7,7 @@ use std::ops::BitOr;
 use std::iter::FromIterator;
 use std::cmp::Ordering;
 use progysis::common::lattices::{HashPowerSet};
+use progysis::core::CompleteLatticeStruct;
 use ::common::lattices::sign_power_set::Sign::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -210,4 +211,9 @@ fn addAssign_test()
 	addAssign_equals!(zero.clone(), plus_minus.clone() => plus_minus_zero.clone());
 	addAssign_equals!(zero.clone(), plus_zero.clone() => plus_zero.clone());
 	addAssign_equals!(zero.clone(), minus_zero.clone() => minus_zero.clone());
+}
+
+#[test]
+fn someTest(){
+	let thisStruct  = CompleteLatticeStruct::new(SignPowerSet::bottom());
 }
