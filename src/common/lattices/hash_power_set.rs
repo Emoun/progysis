@@ -9,7 +9,7 @@ use ::core::{CompleteLattice, Element, PowerSet, Evaluable, PowerSetItem};
 
 trait_alias!(HashPowerSetItem: PowerSetItem, Hash);
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct HashPowerSet<E>
 	where
 		E: HashPowerSetItem
@@ -64,12 +64,16 @@ impl<E> CompleteLattice for HashPowerSet<E>
 	
 	fn is_bottom(&self) -> bool
 	{
-		unimplemented!()
+		self.set.is_empty()
 	}
 	
 	fn join(&mut self, other: &Self)
 	{
-		unimplemented!()
+		for e in other.set.iter(){
+			if(!self.set.contains(e)){
+				self.set.insert(e.clone());
+			}
+		}
 	}
 }
 
@@ -77,7 +81,7 @@ impl<E> Evaluable for HashPowerSet<E>
 	where
 		E: HashPowerSetItem
 {
-	type Value = HashPowerSet<E>;
+	type Value = Self;
 	fn evaluate(&self) -> Element<Self::Value>
 	{
 		Element::new(self.clone())

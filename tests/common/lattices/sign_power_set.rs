@@ -27,10 +27,10 @@ fn comparison_test(){
 	let plus = SPSElement::singleton(Plus);
 	let zero = SPSElement::singleton(Zero);
 	let minus = SPSElement::singleton(Minus);
-	/*let plus_minus = SPSElement::from(vec![Plus, Minus]);
-	let plus_zero = SPSElement::from(vec![Plus, Zero]);
-	let minus_zero = SPSElement::from(vec![Minus, Zero]);
-	let plus_minus_zero = SPSElement::from(vec![Plus, Minus, Zero]);
+	let plus_minus = &plus + &minus;
+	let plus_zero = &plus + &zero;
+	let minus_zero = &minus + &zero;
+	let plus_minus_zero = &plus + &minus + &zero;
 	
 	// They are all equal to themselves
 	let all = vec![empty.clone(), plus.clone(), zero.clone(), minus.clone(), plus_minus.clone(), plus_zero.clone(), minus_zero.clone(), plus_minus_zero.clone()];
@@ -79,19 +79,19 @@ fn comparison_test(){
 	assert!(!plus_minus.comparable_to(&plus_zero));
 	assert!(!plus_minus.comparable_to(&minus_zero));
 	assert!(!plus_zero.comparable_to(&minus_zero));
-	*/
+	
 }
-/*
+
 #[test]
 fn addition_test(){
-	let empty = SignPowerSet::bottom();
-	let plus = SignPowerSet::singleton(Plus);
-	let zero = SignPowerSet::singleton(Zero);
-	let minus = SignPowerSet::singleton(Minus);
-	let plus_minus = SignPowerSet::from(vec![Plus, Minus]);
-	let plus_zero = SignPowerSet::from(vec![Plus, Zero]);
-	let minus_zero = SignPowerSet::from(vec![Minus, Zero]);
-	let plus_minus_zero = SignPowerSet::from(vec![Plus, Minus, Zero]);
+	let empty = SPSElement::bottom();
+	let plus = SPSElement::singleton(Plus);
+	let zero = SPSElement::singleton(Zero);
+	let minus = SPSElement::singleton(Minus);
+	let plus_minus = &plus + &minus;
+	let plus_zero = &plus + &zero;
+	let minus_zero = &minus + &zero;
+	let plus_minus_zero = &plus + &minus + &zero;
 	let all = vec![empty.clone(), plus.clone(), zero.clone(), minus.clone(), plus_minus.clone(), plus_zero.clone(), minus_zero.clone(), plus_minus_zero.clone()];
 	
 	// Adding an element to itself does not change it.
@@ -161,14 +161,14 @@ macro_rules! addAssign_equals {
 #[test]
 fn addAssign_test()
 {
-	let empty = SignPowerSet::bottom();
-	let plus = SignPowerSet::singleton(Plus);
-	let zero = SignPowerSet::singleton(Zero);
-	let minus = SignPowerSet::singleton(Minus);
-	let plus_minus = SignPowerSet::from(vec![Plus, Minus]);
-	let plus_zero = SignPowerSet::from(vec![Plus, Zero]);
-	let minus_zero = SignPowerSet::from(vec![Minus, Zero]);
-	let plus_minus_zero = SignPowerSet::from(vec![Plus, Minus, Zero]);
+	let empty = SPSElement::bottom();
+	let plus = SPSElement::singleton(Plus);
+	let zero = SPSElement::singleton(Zero);
+	let minus = SPSElement::singleton(Minus);
+	let plus_minus = &plus + &minus;
+	let plus_zero = &plus + &zero;
+	let minus_zero = &minus + &zero;
+	let plus_minus_zero = &plus + &minus + &zero;
 	let all = vec![empty.clone(), plus.clone(), zero.clone(), minus.clone(), plus_minus.clone(), plus_zero.clone(), minus_zero.clone(), plus_minus_zero.clone()];
 	
 	// Adding an element to itself does not change it.
@@ -214,9 +214,3 @@ fn addAssign_test()
 	addAssign_equals!(zero.clone(), plus_zero.clone() => plus_zero.clone());
 	addAssign_equals!(zero.clone(), minus_zero.clone() => minus_zero.clone());
 }
-
-#[test]
-fn someTest(){
-	let thisStruct  = CompleteLatticeStruct::new(SignPowerSet::bottom());
-}
-*/

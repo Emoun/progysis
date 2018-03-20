@@ -23,7 +23,7 @@ use std::cmp::Ordering;
 /// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 /// [`Add`]: https://doc.rust-lang.org/std/ops/trait.Add.html
 ///
-pub trait CompleteLattice: Evaluable + PartialOrd + Clone
+pub trait CompleteLattice: PartialOrd + Clone
 {
 	///
 	/// Returns the bottom (Greatest Lower Bound) element of the
@@ -72,16 +72,13 @@ pub trait CompleteLattice: Evaluable + PartialOrd + Clone
 	///
 	/// I.e either `self <= other` or `self > other` holds.
 	///
-	fn comparable_to<T>(&self, other: &T) -> bool
-		where
-			T: Evaluable<Value=Self>
+	fn comparable_to(&self, other: &Self) -> bool
 	{
-		let o = other.evaluate();
-		(self <= &o.inner) || (self > &o.inner)
+		self.le(&other) || self.gt(&other)
 	}
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Element<T>
 	where
 		T: CompleteLattice
@@ -96,17 +93,6 @@ impl<T> Element<T>
 	pub fn new(inner: T) -> Element<T>
 	{
 		Element {inner}
-	}
-}
-
-impl<T> Evaluable for Element<T>
-	where
-		T: CompleteLattice
-{
-	type Value = T;
-	
-	fn evaluate(&self) -> Element<T>{
-		return self.clone();
 	}
 }
 
@@ -130,16 +116,58 @@ impl<T> PartialOrd for Element<T>
 	}
 }
 
-impl<T,R> Add<R> for Element<T>
+impl<T> Add<Self> for Element<T>
 	where
 		T: CompleteLattice,
-		R: Evaluable<Value=T>
 {
 	type Output = Self;
 	
-	fn add(self, rhs: R) -> Self::Output
+	fn add(self, rhs: Self) -> Self::Output
 	{
-		Self{inner: self.inner.add(rhs.consume().inner)}
+		Self{inner: self.inner.add(rhs.inner)}
+	}
+}
+
+impl<'a,T> Add<&'a Element<T>> for Element<T>
+	where
+		T: CompleteLattice,
+{
+	type Output = Self;
+	
+	fn add(mut self, rhs: &'a Element<T>) -> Self::Output
+	{
+		self.inner.join(&rhs.inner);
+		self
+	}
+}
+
+impl<'a,T> Add<Element<T>> for &'a Element<T>
+	where
+		T: CompleteLattice,
+{
+	type Output = Element<T>;
+	
+	fn add(self, mut rhs: Element<T>) -> Self::Output
+	{
+		rhs.inner.join(&self.inner);
+		rhs
+	}
+}
+
+impl<'a,'b,T> Add<&'b Element<T>> for &'a Element<T>
+	where
+		T: CompleteLattice
+{
+	type Output = Element<T>;
+	
+	fn add(self, rhs:&'b Element<T>) -> Self::Output
+	{
+		let mut result = T::bottom();
+		
+		result.join(&self.inner);
+		result.join(&rhs.inner);
+		
+		Element::new(result)
 	}
 }
 
@@ -159,7 +187,7 @@ impl<T> CompleteLattice for Element<T>
 {
 	fn bottom() -> Self
 	{
-		Self{inner: T::bottom()}
+		Self::new(T::bottom())
 	}
 	
 	fn is_bottom(&self) -> bool
@@ -167,8 +195,9 @@ impl<T> CompleteLattice for Element<T>
 		self.inner.is_bottom()
 	}
 	
-	fn join(&mut self, other:&Self)
+	fn join(&mut self, other: &Self)
 	{
 		self.inner.join(&other.inner)
 	}
 }
+
