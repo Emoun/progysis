@@ -36,23 +36,6 @@ impl<E> PowerSet for HashPowerSet<E>
 	}
 }
 
-impl<E> PowerSet for Element<HashPowerSet<E>>
-	where
-		E: HashPowerSetItem
-{
-	type Item = E;
-	type All = HashSet<E>;
-	
-	fn singleton(s: Self::Item) -> Self
-	{
-		Element::new(HashPowerSet::singleton(s))
-	}
-	
-	fn all(&self) -> Self::All{
-		self.inner.all()
-	}
-}
-
 impl<E> CompleteLattice for HashPowerSet<E>
 	where
 		E: HashPowerSetItem

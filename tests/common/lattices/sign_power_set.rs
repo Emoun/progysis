@@ -20,7 +20,6 @@ pub enum Sign{
 pub type SignPowerSet = HashPowerSet<Sign>;
 pub type SPSElement = Element<SignPowerSet>;
 
-
 #[test]
 fn comparison_test(){
 	let empty = SPSElement::bottom();

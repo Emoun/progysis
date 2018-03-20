@@ -40,3 +40,21 @@ pub trait PowerSet: CompleteLattice
 	fn all(&self) -> Self::All;
 }
 
+
+impl<T> PowerSet for Element<T>
+	where
+		T: PowerSet
+{
+	type Item = T::Item;
+	type All = T::All;
+	
+	fn singleton(s: Self::Item) -> Self
+	{
+		Element::new(T::singleton(s))
+	}
+	
+	fn all(&self) -> Self::All{
+		self.inner.all()
+	}
+}
+
