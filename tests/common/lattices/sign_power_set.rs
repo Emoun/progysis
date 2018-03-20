@@ -18,14 +18,13 @@ pub enum Sign{
 }
 
 pub type SignPowerSet = HashPowerSet<Sign>;
-pub type SPSElement = Element<SignPowerSet>;
 
 #[test]
 fn comparison_test(){
-	let empty = SPSElement::bottom();
-	let plus = SPSElement::singleton(Plus);
-	let zero = SPSElement::singleton(Zero);
-	let minus = SPSElement::singleton(Minus);
+	let empty = Element::<SignPowerSet>::bottom();
+	let plus = Element::singleton(Plus);
+	let zero = Element::singleton(Zero);
+	let minus = Element::singleton(Minus);
 	let plus_minus = &plus + &minus;
 	let plus_zero = &plus + &zero;
 	let minus_zero = &minus + &zero;
@@ -83,10 +82,10 @@ fn comparison_test(){
 
 #[test]
 fn addition_test(){
-	let empty = SPSElement::bottom();
-	let plus = SPSElement::singleton(Plus);
-	let zero = SPSElement::singleton(Zero);
-	let minus = SPSElement::singleton(Minus);
+	let empty = Element::<SignPowerSet>::bottom();
+	let plus = Element::singleton(Plus);
+	let zero = Element::singleton(Zero);
+	let minus = Element::singleton(Minus);
 	let plus_minus = &plus + &minus;
 	let plus_zero = &plus + &zero;
 	let minus_zero = &minus + &zero;
@@ -160,10 +159,10 @@ macro_rules! addAssign_equals {
 #[test]
 fn addAssign_test()
 {
-	let empty = SPSElement::bottom();
-	let plus = SPSElement::singleton(Plus);
-	let zero = SPSElement::singleton(Zero);
-	let minus = SPSElement::singleton(Minus);
+	let empty = Element::<SignPowerSet>::bottom();
+	let plus = Element::singleton(Plus);
+	let zero = Element::singleton(Zero);
+	let minus = Element::singleton(Minus);
 	let plus_minus = &plus + &minus;
 	let plus_zero = &plus + &zero;
 	let minus_zero = &minus + &zero;
