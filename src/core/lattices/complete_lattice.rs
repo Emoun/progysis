@@ -181,6 +181,16 @@ impl<T> AddAssign for Element<T>
 	}
 }
 
+impl<'a,T> AddAssign<&'a Element<T>> for Element<T>
+	where
+		T: CompleteLattice
+{
+	fn add_assign(&mut self, other: &'a Element<T>)
+	{
+		self.inner.join(&other.inner)
+	}
+}
+
 impl<T> CompleteLattice for Element<T>
 	where
 		T: CompleteLattice

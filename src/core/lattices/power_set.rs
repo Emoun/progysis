@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 use ::core::{CompleteLattice};
 
-trait_alias!{PowerSetItem: Clone, Eq, Debug}
+trait_alias!{PowerSetItem: Clone, Eq}
 
 ///
 /// A [Power Set] [Complete Lattice] over a set of items.
