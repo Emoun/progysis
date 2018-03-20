@@ -20,9 +20,9 @@ pub trait Evaluable
 	///
 	/// Evaluates a [`CompleteLattice`] element based on the Self.
 	///
-	fn evaluate(&self) -> CompleteLatticeStruct<Self::Value>;
+	fn evaluate(&self) -> Element<Self::Value>;
 	
-	fn consume(self) -> CompleteLatticeStruct<Self::Value>
+	fn consume(self) -> Element<Self::Value>
 	{
 		self.evaluate()
 	}

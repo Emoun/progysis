@@ -23,7 +23,7 @@ use std::cmp::Ordering;
 /// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 /// [`Add`]: https://doc.rust-lang.org/std/ops/trait.Add.html
 ///
-pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + AddAssign + Clone
+pub trait CompleteLattice: Evaluable + PartialOrd + Clone
 {
 	///
 	/// Returns the bottom (Greatest Lower Bound) element of the
@@ -37,6 +37,36 @@ pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + AddAssign + Clon
 	///
 	fn is_bottom(&self) -> bool;
 	
+	fn join(&mut self, other:&Self);
+	
+	///
+	/// Used by &Element::Add
+	///
+	fn join_new(&self, other: &Self) -> Self
+	{
+		let mut result = Self::bottom();
+		result.join(self);
+		result.join(other);
+		result
+	}
+	
+	///
+	/// Used by Element::AddAssign
+	///
+	fn add_assign(&mut self, other:Self)
+	{
+		self.join(&other);
+	}
+	
+	///
+	/// Used by Element::Add
+	///
+	fn add(mut self, other:Self) -> Self
+	{
+		self.join(&other);
+		self
+	}
+	
 	///
 	/// Whether this instance is comparable to the given.
 	///
@@ -49,58 +79,38 @@ pub trait CompleteLattice: Evaluable<Value=Self> + PartialOrd + AddAssign + Clon
 		let o = other.evaluate();
 		(self <= &o.inner) || (self > &o.inner)
 	}
-	
-	///
-	/// Default implementation of Add
-	///
-	fn add(mut self, rhs: Self) -> CompleteLatticeStruct<Self>
-	{
-		self += rhs;
-		CompleteLatticeStruct::new(self)
-	}
-}
-
-impl<T> Evaluable for T
-	where
-	T: CompleteLattice
-{
-	type Value = Self;
-	
-	fn evaluate(&self) -> CompleteLatticeStruct<Self::Value>{
-		return CompleteLatticeStruct::new(self.clone());
-	}
 }
 
 #[derive(Clone)]
-pub struct CompleteLatticeStruct<T>
+pub struct Element<T>
 	where
 		T: CompleteLattice
 {
-	inner: T
+	pub inner: T
 }
 
-impl<T> CompleteLatticeStruct<T>
+impl<T> Element<T>
 	where
 		T: CompleteLattice
 {
-	pub fn new(inner: T) -> CompleteLatticeStruct<T>
+	pub fn new(inner: T) -> Element<T>
 	{
-		CompleteLatticeStruct{inner}
+		Element {inner}
 	}
 }
 
-impl<T> Evaluable for CompleteLatticeStruct<T>
+impl<T> Evaluable for Element<T>
 	where
 		T: CompleteLattice
 {
 	type Value = T;
 	
-	fn evaluate(&self) -> CompleteLatticeStruct<T>{
+	fn evaluate(&self) -> Element<T>{
 		return self.clone();
 	}
 }
 
-impl<T> PartialEq for CompleteLatticeStruct<T>
+impl<T> PartialEq for Element<T>
 	where
 		T: CompleteLattice
 {
@@ -110,7 +120,7 @@ impl<T> PartialEq for CompleteLatticeStruct<T>
 	}
 }
 
-impl<T> PartialOrd for CompleteLatticeStruct<T>
+impl<T> PartialOrd for Element<T>
 	where
 		T: CompleteLattice
 {
@@ -120,7 +130,7 @@ impl<T> PartialOrd for CompleteLatticeStruct<T>
 	}
 }
 
-impl<T,R> Add<R> for CompleteLatticeStruct<T>
+impl<T,R> Add<R> for Element<T>
 	where
 		T: CompleteLattice,
 		R: Evaluable<Value=T>
@@ -129,6 +139,36 @@ impl<T,R> Add<R> for CompleteLatticeStruct<T>
 	
 	fn add(self, rhs: R) -> Self::Output
 	{
-		self.inner.add(rhs.evaluate().inner)
+		Self{inner: self.inner.add(rhs.consume().inner)}
+	}
+}
+
+impl<T> AddAssign for Element<T>
+	where
+		T: CompleteLattice
+{
+	fn add_assign(&mut self, other: Element<T>)
+	{
+		self.inner.add_assign(other.inner)
+	}
+}
+
+impl<T> CompleteLattice for Element<T>
+	where
+		T: CompleteLattice
+{
+	fn bottom() -> Self
+	{
+		Self{inner: T::bottom()}
+	}
+	
+	fn is_bottom(&self) -> bool
+	{
+		self.inner.is_bottom()
+	}
+	
+	fn join(&mut self, other:&Self)
+	{
+		self.inner.join(&other.inner)
 	}
 }

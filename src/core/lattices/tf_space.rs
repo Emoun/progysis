@@ -1,5 +1,5 @@
 use super::*;
-
+/*
 use std::ops::{AddAssign, Index};
 
 ///
@@ -32,5 +32,5 @@ pub trait TFSpace<'a,K,E>: CompleteLattice + AddAssign + Index<K, Output=E>
 		self.keys().any(|key| key == k)
 	}
 }
-
+*/
 

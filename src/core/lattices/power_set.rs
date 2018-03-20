@@ -40,5 +40,3 @@ pub trait PowerSet: CompleteLattice
 	fn all(&self) -> Self::All;
 }
 
-
-
