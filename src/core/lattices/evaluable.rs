@@ -9,6 +9,8 @@ use super::*;
 /// [`CompleteLattice`]: trait.CompleteLattice.html
 ///
 pub trait Evaluable
+	where
+		Self: Sized
 {
 	///
 	/// The [`CompleteLattice`] type of the element this evaluates to.
@@ -18,6 +20,11 @@ pub trait Evaluable
 	///
 	/// Evaluates a [`CompleteLattice`] element based on the Self.
 	///
-	fn evaluate(&self) -> Self::Value;
+	fn evaluate(&self) -> Element<Self::Value>;
+	
+	fn consume(self) -> Element<Self::Value>
+	{
+		self.evaluate()
+	}
 }
 

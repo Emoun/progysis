@@ -4,7 +4,7 @@ use std::fmt::Debug;
 
 use ::core::{CompleteLattice};
 
-trait_alias!{PowerSetItem: Clone, Eq, Debug}
+trait_alias!{PowerSetItem: Clone, Eq}
 
 ///
 /// A [Power Set] [Complete Lattice] over a set of items.
@@ -41,4 +41,20 @@ pub trait PowerSet: CompleteLattice
 }
 
 
+impl<T> PowerSet for Element<T>
+	where
+		T: PowerSet
+{
+	type Item = T::Item;
+	type All = T::All;
+	
+	fn singleton(s: Self::Item) -> Self
+	{
+		Element::new(T::singleton(s))
+	}
+	
+	fn all(&self) -> Self::All{
+		self.inner.all()
+	}
+}
 

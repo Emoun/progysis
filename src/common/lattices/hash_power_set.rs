@@ -1,48 +1,31 @@
 use super::*;
 
+use std::cmp::Ordering;
 use std::ops::{Add, AddAssign};
 use std::fmt::{Debug, Formatter, Error};
 use std::collections::HashSet;
 use std::hash::Hash;
-use ::core::{PowerSetItem, PowerSetWrapper, PowerSetInner, Evaluable};
+use ::core::{CompleteLattice, Element, PowerSet, Evaluable, PowerSetItem};
 
-trait_alias!{HashPowerSetItem: PowerSetItem, Hash}
+trait_alias!(HashPowerSetItem: PowerSetItem, Hash);
 
-pub type HashPowerSet<V> = PowerSetWrapper<HashPowerSetInner<V>>;
-
-#[derive(Clone)]
-pub struct HashPowerSetInner<E>
+#[derive(Debug, Clone)]
+pub struct HashPowerSet<E>
 	where
 		E: HashPowerSetItem
 {
 	pub set: HashSet<E>
 }
 
-impl<E> Debug for HashPowerSetInner<E>
-	where
-		E: HashPowerSetItem + Debug
-{
-	fn fmt(&self, f:&mut Formatter) -> Result<(),Error>{
-		match f.write_str("HashPowerSet") {
-			Ok(_) => self.set.fmt(f),
-			Err(r) => Err(r)
-		}
-		
-	}
-}
-
-impl<E> PowerSetInner for HashPowerSetInner<E>
+impl<E> PowerSet for HashPowerSet<E>
 	where
 		E: HashPowerSetItem
 {
 	type Item = E;
 	type All = HashSet<E>;
 	
-	fn empty() -> Self{
-		Self{set: HashSet::new()}
-	}
-	
-	fn singleton(s: Self::Item) -> Self{
+	fn singleton(s: Self::Item) -> Self
+	{
 		let mut set = HashSet::new();
 		set.insert(s);
 		Self{set}
@@ -53,16 +36,104 @@ impl<E> PowerSetInner for HashPowerSetInner<E>
 	}
 }
 
-impl<E> AddAssign for HashPowerSetInner<E>
+impl<E> CompleteLattice for HashPowerSet<E>
 	where
 		E: HashPowerSetItem
 {
-	fn add_assign(&mut self, other: HashPowerSetInner<E>)
+	fn bottom() -> Self
+	{
+		Self{set: HashSet::new()}
+	}
+	
+	fn is_bottom(&self) -> bool
+	{
+		self.set.is_empty()
+	}
+	
+	fn join(&mut self, other: &Self)
 	{
 		for e in other.set.iter(){
-			if !self.set.contains(e) {
+			if(!self.set.contains(e)){
 				self.set.insert(e.clone());
 			}
 		}
 	}
 }
+
+impl<E> Evaluable for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	type Value = Self;
+	fn evaluate(&self) -> Element<Self::Value>
+	{
+		Element::new(self.clone())
+	}
+	
+	fn consume(self) -> Element<Self::Value>
+	{
+		Element::new(self)
+	}
+}
+
+impl<E> PartialOrd for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	fn partial_cmp(&self, other:&Self) -> Option<Ordering>
+	{
+		let self_subset = iter_subset(	&self.set,
+										  &other.set);
+		let other_subset = iter_subset(&other.set,
+									   &self.set);
+		if self_subset {
+			if other_subset {
+				Some(Ordering::Equal)
+			} else {
+				Some(Ordering::Less)
+			}
+		} else if other_subset {
+			Some(Ordering::Greater)
+		} else {
+			None
+		}
+	}
+}
+
+impl<E> PartialEq for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	fn eq(&self, other:&Self) -> bool
+	{
+		iter_subset::<E>(&self.set, &other.set)
+			&&
+			iter_subset(&other.set, &self.set)
+	}
+}
+
+
+
+// Helper functions
+
+pub fn iter_subset<E>(subset: &HashSet<E>, superset: &HashSet<E>) -> bool
+	where
+		E: HashPowerSetItem
+{
+	for e in subset.into_iter() {
+		if !(superset.into_iter().any(
+			|o|{
+				o == e
+			})
+		)
+		{
+			return false;
+		}
+	}
+	true
+}
+
+
+
+
+
