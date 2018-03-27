@@ -2,6 +2,8 @@
 #![allow(unused_imports)]
 #[macro_use]
 extern crate progysis;
+#[macro_use]
+extern crate graphene;
 
 mod common;
 

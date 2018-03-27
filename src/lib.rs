@@ -1,4 +1,3 @@
-
 //!
 //! Program analysis library.
 //!
@@ -8,6 +7,11 @@
 //!
 //!
 //!
+//!
+//!
+#[macro_use]
+extern crate graphene;
+
 #[macro_use]
 mod trait_alias;
 pub mod core;

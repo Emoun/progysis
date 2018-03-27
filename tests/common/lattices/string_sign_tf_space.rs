@@ -7,7 +7,7 @@ pub type StringSignTFSpace<'a> = HashTFSpace<'a, &'a str, SignPowerSet>;
 
 #[test]
 fn initialization_test(){
-	let mut f = Element::<StringSignTFSpace>::bottom();
+	let f = Element::<StringSignTFSpace>::bottom();
 	assert!(f.is_bottom());
 }
 
