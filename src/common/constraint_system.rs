@@ -3,16 +3,21 @@ use super::*;
 use graphene::core::*;
 use graphene::common::*;
 use ::core::{Element, CompleteLattice};
-use std::collections::HashMap;
+use ::common::worklist::Worklist;
+use ::common::MonotoneFunction;
 
-pub struct ConstraintSystem<'a,L>
+use std::collections::HashMap;
+use std::marker::PhantomData;
+use std::fmt::{Display};
+
+pub struct ConstraintSystem<L>
 	where
-		L: 'a + CompleteLattice
+		L: CompleteLattice
 {
-	constraints: AdjListGraph<u32, fn(&'a Element<L>)->Element<L>>
+	constraints: AdjListGraph<u32,MonotoneFunction<L>>
 }
 
-impl<'a,L> ConstraintSystem<'a,L>
+impl<L> ConstraintSystem<L>
 	where
 		L: CompleteLattice
 {
@@ -21,35 +26,49 @@ impl<'a,L> ConstraintSystem<'a,L>
 		Self::empty_graph()
 	}
 	
-	pub fn evaluate_flow_variable(&self, fv: u32, values: &'a HashMap<u32,Element<L>>)
+	pub fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<L>>)
 		-> Element<L>
 	{
 		let all_edges_iter = self.constraints.all_edges().into_iter();
 		let mut sourced_in_fv = all_edges_iter.filter(|e| e.source() == fv);
 		
 		if let Some(first_edge) = sourced_in_fv.next(){
-			let mut result = first_edge.weight()(&values[&first_edge.sink()]);
+			let mut result = first_edge.weight().func(&values[&first_edge.sink()]);
 			for e in sourced_in_fv {
-				result += e.weight()(&values[&e.sink()]);
+				result += e.weight().func(&values[&e.sink()]);
 			}
 			result
 		}else{
 			// flow variable has no dependencies
 			// Therefore, just return whatever values the map
-			// gives it
+			// give	s it
 			values[&fv].clone()
+		}
+	}
+	
+	pub fn solve<W>(&self, initial_values: &mut HashMap<u32,Element<L>>)
+		where
+			W: Worklist
+	{
+		let mut worklist = W::initialize(self);
+		while let Some(fV) = worklist.next(){
+			let new_value = self.evaluate_flow_variable(fV, initial_values);
+			if new_value != initial_values[&fV] {
+				worklist.insert(fV);
+				initial_values.insert(fV, new_value);
+			}
 		}
 	}
 }
 
-impl<'a,L> BaseGraph for ConstraintSystem<'a,L>
+impl<L> BaseGraph for ConstraintSystem<L>
 	where
-		L: 'a + CompleteLattice
+		L: CompleteLattice,
 {
 	type Vertex = u32;
-	type Weight = fn(&'a Element<L>)->Element<L>;
-	type VertexIter = <AdjListGraph<u32, fn(&'a Element<L>)->Element<L>> as BaseGraph>::VertexIter;
-	type EdgeIter = <AdjListGraph<u32, fn(&'a Element<L>)->Element<L>> as BaseGraph>::EdgeIter;
+	type Weight = MonotoneFunction<L>;
+	type VertexIter = <AdjListGraph<u32,MonotoneFunction<L>> as BaseGraph>::VertexIter;
+	type EdgeIter = <AdjListGraph<u32,MonotoneFunction<L>> as BaseGraph>::EdgeIter;
 	
 	fn empty_graph() -> Self
 	{
@@ -82,4 +101,3 @@ impl<'a,L> BaseGraph for ConstraintSystem<'a,L>
 		unimplemented!();
 	}
 }
-
