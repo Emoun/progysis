@@ -24,7 +24,7 @@ fn comparison_test(){
 	let mut f1 = Element::<StringSignTFSpace>::bottom();
 	let mut f2 = Element::<StringSignTFSpace>::bottom();
 	f1.add_key("v1");
-	f2.add_key_with("v1", Element::singleton(Sign::Zero));
+	f2["v1"] = Element::singleton(Sign::Zero);
 	assert!( f1 < f2, "{:?} >= {:?}", f1, f2 );
 }
 
@@ -33,7 +33,7 @@ fn add_test(){
 	let mut f1 = Element::<StringSignTFSpace>::bottom();
 	let mut f2 = Element::<StringSignTFSpace>::bottom();
 	f1.add_key("v1");
-	f2.add_key_with("v1", Element::singleton(Sign::Zero));
+	f2["v1"] = Element::singleton(Sign::Zero);
 	let f3 = f1 + f2;
 	assert_eq!( f3["v1"], Element::singleton(Sign::Zero), "\nf3: {:?}", f3);
 }
@@ -43,7 +43,7 @@ fn add_assign_test(){
 	let mut f1 = Element::<StringSignTFSpace>::bottom();
 	let mut f2 = Element::<StringSignTFSpace>::bottom();
 	f1.add_key("v1");
-	f2.add_key_with("v1", Element::singleton(Sign::Zero));
+	f2["v1"] = Element::singleton(Sign::Zero);
 	let f3 = f1.clone() + f2.clone();
 	f1 += f2;
 	assert_eq!( f3, f1, "{:?} != {:?}", f3, f1);

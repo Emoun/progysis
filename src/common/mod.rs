@@ -3,7 +3,6 @@
 //!
 //!
 //!
-use super::*;
 
 mod constraint_system;
 mod monotone_function;

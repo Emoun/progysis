@@ -1,6 +1,6 @@
 use super::*;
 
-use std::ops::{AddAssign, Index};
+use std::ops::{Index, IndexMut};
 
 trait_alias!(TFSpaceKey: Copy, Eq);
 trait_alias!(TFSpaceElement: CompleteLattice);
@@ -15,19 +15,23 @@ trait_alias!(TFSpaceElement: CompleteLattice);
 /// * Given two [`TFSpace`]s, f1 and f2, and `f3 = f1 + f2`
 /// then `f1[s] <= f3[s]` and `f2[s] <= f3[s]` for all keys `s`.
 ///
-pub trait TFSpace<'a,K,E>: CompleteLattice + Index<K, Output=Element<E>>
+/// ### Trait requirements
+///
+/// * CompleteLattice
+/// * Index
+/// * IndexMut: Must not fail. If an index is present in the object it should be added.
+///
+pub trait TFSpace<'a,K,E>: CompleteLattice + Index<K, Output=Element<E>> + IndexMut<K>
 	where
 		K: TFSpaceKey,
 		E: 'a + TFSpaceElement
 {
 	type Keys: Iterator<Item=K>;
 	
-	fn add_key_with(&mut self, k: K, e: Element<E>);
-	
 	fn keys(&self) -> Self::Keys;
 	
 	fn add_key(&mut self, k:K){
-		self.add_key_with(k, Element::bottom())
+		self[k] = Element::bottom();
 	}
 	
 	fn has_key(&self, k:K) -> bool
@@ -43,12 +47,6 @@ impl<'a,K,E,T> TFSpace<'a,K,E> for Element<T>
 		T: TFSpace<'a,K,E>
 {
 	type Keys = T::Keys;
-	
-	fn add_key_with(&mut self, k: K, e: Element<E>)
-	
-	{
-		self.inner.add_key_with(k,e)
-	}
 	
 	fn keys(&self) -> Self::Keys
 	{
@@ -77,5 +75,17 @@ impl<'a,K,E,T> Index<K> for Element<T>
 	fn index(&self, index: K) -> &Self::Output
 	{
 		&self.inner[index]
+	}
+}
+
+impl<'a,K,E,T> IndexMut<K> for Element<T>
+	where
+		K: TFSpaceKey,
+		E: 'a + TFSpaceElement,
+		T: TFSpace<'a,K,E> + Index<K, Output=Element<E>>
+{
+	fn index_mut(&mut self, index: K) -> &mut Self::Output
+	{
+		&mut self.inner[index]
 	}
 }

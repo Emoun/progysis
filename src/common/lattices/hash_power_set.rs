@@ -1,8 +1,5 @@
-use super::*;
 
 use std::cmp::Ordering;
-use std::ops::{Add, AddAssign};
-use std::fmt::{Debug, Formatter, Error};
 use std::collections::HashSet;
 use std::hash::Hash;
 use ::core::{CompleteLattice, Element, PowerSet, Evaluable, PowerSetItem};
@@ -53,7 +50,7 @@ impl<E> CompleteLattice for HashPowerSet<E>
 	fn join(&mut self, other: &Self)
 	{
 		for e in other.set.iter(){
-			if(!self.set.contains(e)){
+			if !self.set.contains(e) {
 				self.set.insert(e.clone());
 			}
 		}

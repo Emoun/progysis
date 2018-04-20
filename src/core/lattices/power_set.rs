@@ -1,8 +1,5 @@
-use super::*;
 
-use std::fmt::Debug;
-
-use ::core::{CompleteLattice};
+use ::core::{CompleteLattice,Element};
 
 trait_alias!{PowerSetItem: Clone, Eq}
 

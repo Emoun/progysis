@@ -1,4 +1,3 @@
-use super::*;
 
 use common::ConstraintSystem;
 use core::CompleteLattice;

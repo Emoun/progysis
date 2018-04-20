@@ -1,32 +1,31 @@
 
-//!
-//!
-//!```
-//!	#[macro_use]
-//! extern crate progyis;
-//!
-//!
-//!
-//! trait_alias!(ExAlias1: Copy, Eq, Clone);
-//! trait_alias!(ExAlias2: CompleteLattice);
-//!	trait_alias!(ExAlias3<K>: Clone, Iterator<Item=K> where K: ExAlias2);
-//! trait_alias!(ExAlias4<Q,W,E>: Copy, Clone, Eq, Iterator<Item=Q>
-//!		where
-//!			Q: Copy, Eq;
-//!			W: Clone;
-//!			E: Eq;
-//!	);
-//!
-//! trait_alias!(ExAlias5<'a>: Copy, Eq, Clone);
-//! trait_alias!(ExAlias6<'a,Q>: Copy, Eq, Clone where Q: Copy, Eq);
-//!
-//! trait_alias!(ExAlias7<'a>: ExAlias6<'a>, Hash);
-//! ```
-//!
-//!
-//!
-//!
-
+///
+///
+///```
+///	#[macro_use]
+/// extern crate progyis;
+///
+/// trait_alias!(ExAlias1: Copy, Eq, Clone);
+/// trait_alias!(ExAlias2: CompleteLattice);
+///	trait_alias!(ExAlias3<K>: Clone, Iterator<Item=K> where K: ExAlias2);
+/// trait_alias!(ExAlias4<Q,W,E>: Copy, Clone, Eq, Iterator<Item=Q>
+///		where
+///			Q: Copy, Eq;
+///			W: Clone;
+///			E: Eq;
+///	);
+///
+/// trait_alias!(ExAlias5<'a>: Copy, Eq, Clone);
+/// trait_alias!(ExAlias6<'a,Q>: Copy, Eq, Clone where Q: Copy, Eq);
+///
+/// trait_alias!(ExAlias7<'a>: ExAlias6<'a>, Hash);
+///
+/// ```
+///
+///
+///
+///
+///
 #[macro_export]
 macro_rules! trait_alias{
 	// No lifetimes, no generics

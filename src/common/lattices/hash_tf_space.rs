@@ -1,15 +1,12 @@
-use super::*;
 
 use std::collections::{HashMap,HashSet};
 use std::hash::Hash;
-use std::ops::{Add, Index, AddAssign};
+use std::ops::{Index, IndexMut};
 use std::cmp::Ordering;
-use std::iter::Cloned;
 use std::collections::hash_set::IntoIter;
 use std::marker::PhantomData;
-use std::fmt::Debug;
 
-use ::core::{CompleteLattice, Evaluable, TFSpace, TFSpaceKey, TFSpaceElement, Element};
+use ::core::{CompleteLattice, TFSpace, TFSpaceKey, TFSpaceElement, Element};
 
 trait_alias!(HashTFSpaceKey: TFSpaceKey, Hash);
 trait_alias!(HashTFSpaceElement: TFSpaceElement);
@@ -30,11 +27,6 @@ impl<'a,K,E> TFSpace<'a,K,E> for HashTFSpace<'a,K,E>
 		E: 'a + HashTFSpaceElement
 {
 	type Keys = IntoIter<K>;
-	
-	fn add_key_with(&mut self, k: K, e: Element<E>)
-	{
-		self.map.insert(k, e);
-	}
 	
 	fn keys(&self) -> Self::Keys{
 		self.map.keys().cloned().collect::<HashSet<K>>().into_iter()
@@ -140,6 +132,21 @@ impl<'a,K,E> Index<K> for HashTFSpace<'a,K,E>
 	fn index(&self, index: K) -> &Self::Output
 	{
 		&self.map[&index]
+	}
+}
+
+impl<'a,K,E> IndexMut<K> for HashTFSpace<'a,K,E>
+	where
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement
+{
+	fn index_mut(&mut self, index: K) -> &mut Self::Output
+	{
+		if !self.map.contains_key(&index){
+			self.map.insert(index, Element::bottom());
+		}
+		
+		self.map.get_mut(&index).unwrap()
 	}
 }
 
