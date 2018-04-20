@@ -25,10 +25,10 @@ fn comparison_test(){
 	let plus = Element::singleton(Plus);
 	let zero = Element::singleton(Zero);
 	let minus = Element::singleton(Minus);
-	let plus_minus = &plus + &minus;
-	let plus_zero = &plus + &zero;
-	let minus_zero = &minus + &zero;
-	let plus_minus_zero = &plus + &minus + &zero;
+	let plus_minus = Element::from_iter(vec![Plus, Minus]);
+	let plus_zero = Element::from_iter(vec![Plus, Zero]);
+	let minus_zero = Element::from_iter(vec![Minus,Zero]);
+	let plus_minus_zero =  Element::from_iter(vec![Plus, Minus, Zero]);
 	
 	// They are all equal to themselves
 	let all = vec![empty.clone(), plus.clone(), zero.clone(), minus.clone(), plus_minus.clone(), plus_zero.clone(), minus_zero.clone(), plus_minus_zero.clone()];
@@ -86,10 +86,10 @@ fn addition_test(){
 	let plus = Element::singleton(Plus);
 	let zero = Element::singleton(Zero);
 	let minus = Element::singleton(Minus);
-	let plus_minus = &plus + &minus;
-	let plus_zero = &plus + &zero;
-	let minus_zero = &minus + &zero;
-	let plus_minus_zero = &plus + &minus + &zero;
+	let plus_minus = Element::from_iter(vec![Plus, Minus]);
+	let plus_zero = Element::from_iter(vec![Plus, Zero]);
+	let minus_zero = Element::from_iter(vec![Minus,Zero]);
+	let plus_minus_zero =  Element::from_iter(vec![Plus, Minus, Zero]);
 	let all = vec![empty.clone(), plus.clone(), zero.clone(), minus.clone(), plus_minus.clone(), plus_zero.clone(), minus_zero.clone(), plus_minus_zero.clone()];
 	
 	// Adding an element to itself does not change it.
@@ -163,10 +163,10 @@ fn addAssign_test()
 	let plus = Element::singleton(Plus);
 	let zero = Element::singleton(Zero);
 	let minus = Element::singleton(Minus);
-	let plus_minus = &plus + &minus;
-	let plus_zero = &plus + &zero;
-	let minus_zero = &minus + &zero;
-	let plus_minus_zero = &plus + &minus + &zero;
+	let plus_minus = Element::from_iter(vec![Plus, Minus]);
+	let plus_zero = Element::from_iter(vec![Plus, Zero]);
+	let minus_zero = Element::from_iter(vec![Minus,Zero]);
+	let plus_minus_zero =  Element::from_iter(vec![Plus, Minus, Zero]);
 	let all = vec![empty.clone(), plus.clone(), zero.clone(), minus.clone(), plus_minus.clone(), plus_zero.clone(), minus_zero.clone(), plus_minus_zero.clone()];
 	
 	// Adding an element to itself does not change it.

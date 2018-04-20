@@ -35,6 +35,20 @@ pub trait PowerSet: CompleteLattice
 	/// [Power Set](http://mathworld.wolfram.com/PowerSet.html) element.
 	///
 	fn all(&self) -> Self::All;
+	
+	///
+	/// li
+	///
+	fn from_iter<F>(i: F) -> Self
+		where F: IntoIterator<Item=Self::Item>
+	{
+		let mut result = Self::bottom();
+		
+		for v in i.into_iter() {
+			result.add_assign(Self::singleton(v));
+		}
+		result
+	}
 }
 
 
