@@ -4,35 +4,45 @@ use graphene::core::*;
 use graphene::common::*;
 use ::core::{Element, CompleteLattice};
 use ::common::worklist::Worklist;
-use ::common::MonotoneFunction;
+use std::iter::FromIterator;
 
 use std::collections::HashMap;
 
-custom_graph!{
-	pub struct ConstraintSystem<L>
-	as AdjListGraph<u32,MonotoneFunction<L>>
-	where L: CompleteLattice
+pub struct ConstraintSystem<G,L,A>
+	where
+		G: BaseGraph<Vertex=u32, Weight=A>,
+		<G as BaseGraph>::VertexIter: VertexIter<u32>,
+		<G as BaseGraph>::EdgeIter: EdgeIter<u32,A>,
+		L: CompleteLattice,
+		A: Weight
+{
+	pub graph: G,
+	func: fn(&Element<L>, A) -> Element<L>
 }
 
-impl<L> ConstraintSystem<L>
+impl<G,L,A> ConstraintSystem<G,L,A>
 	where
-		L: CompleteLattice
+		G: BaseGraph<Vertex=u32, Weight=A>,
+		<G as BaseGraph>::VertexIter: VertexIter<u32>,
+		<G as BaseGraph>::EdgeIter: EdgeIter<u32,A>,
+		L: CompleteLattice,
+		A: Weight
 {
-	pub fn new() -> Self
+	pub fn new(graph: G, func: fn(&Element<L>, A) -> Element<L>) -> Self
 	{
-		Self::empty_graph()
+		Self{graph, func}
 	}
 	
-	pub fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<L>>)
+	fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<L>>)
 		-> Element<L>
 	{
-		let all_edges_iter = self.all_edges().into_iter();
+		let all_edges_iter = self.graph.all_edges().into_iter();
 		let mut sourced_in_fv = all_edges_iter.filter(|e| e.source() == fv);
 		
 		if let Some(first_edge) = sourced_in_fv.next(){
-			let mut result = first_edge.weight().func(&values[&first_edge.sink()]);
+			let mut result = (self.func)(&values[&first_edge.sink()], first_edge.weight());
 			for e in sourced_in_fv {
-				result += e.weight().func(&values[&e.sink()]);
+				result += (self.func)(&values[&e.sink()], e.weight());
 			}
 			result
 		}else{

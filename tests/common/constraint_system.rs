@@ -4,44 +4,13 @@ use ::common::lattices::{Sign, SignPowerSet};
 use progysis::common::{ConstraintSystem, MonotoneFunction};
 use progysis::common::worklist::FifoWorklist;
 use graphene::core::{BaseEdge,BaseGraph};
+use graphene::common::AdjListGraph;
 use std::collections::HashMap;
 
-pub type U32ConstraintSystem = ConstraintSystem<u32>;
 
-fn add_one(e: &Element<u32>) -> Element<u32>
+fn add(e: &Element<u32>, action: u32) -> Element<u32>
 {
-	Element::new(e.inner + 1)
-}
-
-fn add_two(e: &Element<u32>) -> Element<u32>
-{
-	Element::new(e.inner + 2)
-}
-
-#[test]
-fn simple_test()
-{
-	let mut map = HashMap::new();
-	map.insert(0, Element::new(1));
-	map.insert(1, Element::new(10));
-	map.insert(2, Element::new(20));
-	
-	let mut cs = U32ConstraintSystem::new();
-	
-	cs.add_vertex(0).unwrap();
-	cs.add_vertex(1).unwrap();
-	cs.add_vertex(2).unwrap();
-	
-	assert_eq!(Element::new(1), cs.evaluate_flow_variable(0, &map));
-	assert_eq!(Element::new(10), cs.evaluate_flow_variable(1, &map));
-	assert_eq!(Element::new(20), cs.evaluate_flow_variable(2, &map));
-	
-	cs.add_edge(BaseEdge::new(1,0,MonotoneFunction::new(add_one))).unwrap();
-	cs.add_edge(BaseEdge::new(2,1,MonotoneFunction::new(add_two))).unwrap();
-	
-	assert_eq!(Element::new(1), cs.evaluate_flow_variable(0, &map));
-	assert_eq!(Element::new(2), cs.evaluate_flow_variable(1, &map));
-	assert_eq!(Element::new(12), cs.evaluate_flow_variable(2, &map));
+	Element::new(e.inner + action)
 }
 
 #[test]
@@ -52,13 +21,15 @@ fn solve_test()
 	map.insert(1, Element::bottom());
 	map.insert(2, Element::bottom());
 	
-	let mut cs = U32ConstraintSystem::new();
-	cs.add_vertex(0).unwrap();
-	cs.add_vertex(1).unwrap();
-	cs.add_vertex(2).unwrap();
+	let mut cs_graph = AdjListGraph::empty_graph();
+	cs_graph.add_vertex(0).unwrap();
+	cs_graph.add_vertex(1).unwrap();
+	cs_graph.add_vertex(2).unwrap();
 	
-	cs.add_edge(BaseEdge::new(1,0,MonotoneFunction::new(add_one))).unwrap();
-	cs.add_edge(BaseEdge::new(2,1,MonotoneFunction::new(add_two))).unwrap();
+	cs_graph.add_edge(BaseEdge::new(1, 0, 1)).unwrap();
+	cs_graph.add_edge(BaseEdge::new(2, 1, 2)).unwrap();
+	
+	let cs = ConstraintSystem::new(cs_graph, add);
 	
 	cs.solve::<FifoWorklist>(&mut map);
 	
