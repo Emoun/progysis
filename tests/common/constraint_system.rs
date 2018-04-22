@@ -3,12 +3,12 @@ use super::*;
 use ::common::lattices::{Sign, SignPowerSet};
 use progysis::common::{ConstraintSystem, MonotoneFunction};
 use progysis::common::worklist::FifoWorklist;
-use graphene::core::{BaseEdge,BaseGraph};
+use graphene::core::{BaseGraph, EdgeWeightedGraph};
 use graphene::common::AdjListGraph;
 use std::collections::HashMap;
 
 
-fn add(e: &Element<u32>, action: u32) -> Element<u32>
+fn add(e: &Element<u32>, action: &u32) -> Element<u32>
 {
 	Element::new(e.inner + action)
 }
@@ -26,8 +26,8 @@ fn solve_test()
 	cs_graph.add_vertex(1).unwrap();
 	cs_graph.add_vertex(2).unwrap();
 	
-	cs_graph.add_edge(BaseEdge::new(1, 0, 1)).unwrap();
-	cs_graph.add_edge(BaseEdge::new(2, 1, 2)).unwrap();
+	cs_graph.add_edge_weighted((1, 0),1).unwrap();
+	cs_graph.add_edge_weighted((2, 1), 2).unwrap();
 	
 	let cs = ConstraintSystem::new(cs_graph, add);
 	

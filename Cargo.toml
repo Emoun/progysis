@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["Emad"]
 
 [dependencies]
-graphene = {git = "http://github.com/Emoun/graphene"}
+graphene = {git = "http://github.com/Emoun/graphene", branch = "weighted_redesign"}

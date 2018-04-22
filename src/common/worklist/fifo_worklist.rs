@@ -1,7 +1,7 @@
 use super::*;
 
 use std::vec::Vec;
-use common::ConstraintSystem;
+use common::{ConstraintSystem, ConstraintSystemGraph};
 use core::CompleteLattice;
 use graphene::core::*;
 
@@ -17,13 +17,13 @@ impl Worklist for FifoWorklist
 		self.list.push(v);
 	}
 	
-	fn initialize<G,L,A>(cs: &ConstraintSystem<G,L,A>) -> Self
+	fn initialize<G,L,A,I>(cs: &ConstraintSystem<G,L,A,I>) -> Self
 		where
-			G: BaseGraph<Vertex=u32, Weight=A>,
-			<G as BaseGraph>::VertexIter: VertexIter<u32>,
-			<G as BaseGraph>::EdgeIter: EdgeIter<u32,A>,
+			G: ConstraintSystemGraph<A,I>,
+			<G as BaseGraph>::VertexIter: IdIter<u32>,
+			<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,I)>,
+			I: Id,
 			L: CompleteLattice,
-			A: Weight
 	{
 		let mut new = FifoWorklist{list: Vec::new()};
 		for v in cs.graph.all_vertices().into_iter(){
