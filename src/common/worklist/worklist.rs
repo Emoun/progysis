@@ -8,11 +8,10 @@ pub trait Worklist: Iterator<Item=u32>
 {
 	fn insert(&mut self, v: u32);
 	
-	fn initialize<G,L,A,I>(cs: &ConstraintSystem<G,L,A,I>) -> Self
+	fn initialize<G,L,A>(cs: &ConstraintSystem<G,L,A>) -> Self
 		where
-			G: ConstraintSystemGraph<A,I>,
+			G: ConstraintSystemGraph<A>,
 			<G as BaseGraph>::VertexIter: IdIter<u32>,
-			<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,I)>,
-			I: Id,
+			<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
 			L: CompleteLattice;
 }

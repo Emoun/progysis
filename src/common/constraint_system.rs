@@ -9,49 +9,44 @@ use std::iter::FromIterator;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-pub trait ConstraintSystemGraph<A,I>:
+pub trait ConstraintSystemGraph<A>:
 	EdgeWeightedGraph<EdgeWeight=A> +
-	WeightedGraph<Weight=A,WeightRef=I> +
-	BaseGraph<Vertex=u32,Edge=I>
+	WeightedGraph<Weight=A,WeightRef=<Self as BaseGraph>::Edge> +
+	BaseGraph<Vertex=u32>
 	where
 		<Self as BaseGraph>::VertexIter: IdIter<u32>,
-		<Self as BaseGraph>::EdgeIter: IdIter<(u32,u32,I)>,
-		I: Id,
+		<Self as BaseGraph>::EdgeIter: IdIter<(u32,u32,<Self as BaseGraph>::Edge)>
 {}
-impl<A,I,G> ConstraintSystemGraph<A,I> for G
+impl<A,G> ConstraintSystemGraph<A> for G
 	where
 		G: 	EdgeWeightedGraph<EdgeWeight=A> +
-			WeightedGraph<Weight=A,WeightRef=I> +
-			BaseGraph<Vertex=u32,Edge=I>,
-		<G as BaseGraph>::VertexIter: IdIter<u32>,
-		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,I)>,
-		I: Id,
+			WeightedGraph<Weight=A,WeightRef=<Self as BaseGraph>::Edge> +
+			BaseGraph<Vertex=u32>,
+		<Self as BaseGraph>::VertexIter: IdIter<u32>,
+		<Self as BaseGraph>::EdgeIter: IdIter<(u32,u32,<Self as BaseGraph>::Edge)>
 {}
 
-pub struct ConstraintSystem<G,L,A,I>
+pub struct ConstraintSystem<G,L,A>
 	where
-		G: ConstraintSystemGraph<A,I>,
+		G: ConstraintSystemGraph<A>,
 		<G as BaseGraph>::VertexIter: IdIter<u32>,
-		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,I)>,
-		I: Id,
+		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
 		L: CompleteLattice,
 {
 	pub graph: G,
-	func: fn(&Element<L>, &A) -> Element<L>,
-	ph: PhantomData<I>
+	func: fn(&Element<L>, &A) -> Element<L>
 }
 
-impl<G,L,A,I> ConstraintSystem<G,L,A,I>
+impl<G,L,A> ConstraintSystem<G,L,A>
 	where
-		G: ConstraintSystemGraph<A,I>,
+		G: ConstraintSystemGraph<A>,
 		<G as BaseGraph>::VertexIter: IdIter<u32>,
-		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,I)>,
-		I: Id,
+		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
 		L: CompleteLattice,
 {
 	pub fn new(graph: G, func: fn(&Element<L>, &A) -> Element<L>) -> Self
 	{
-		Self{graph, func, ph: PhantomData}
+		Self{graph, func}
 	}
 	
 	fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<L>>)

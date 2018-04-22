@@ -17,12 +17,11 @@ impl Worklist for FifoWorklist
 		self.list.push(v);
 	}
 	
-	fn initialize<G,L,A,I>(cs: &ConstraintSystem<G,L,A,I>) -> Self
+	fn initialize<G,L,A>(cs: &ConstraintSystem<G,L,A>) -> Self
 		where
-			G: ConstraintSystemGraph<A,I>,
+			G: ConstraintSystemGraph<A>,
 			<G as BaseGraph>::VertexIter: IdIter<u32>,
-			<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,I)>,
-			I: Id,
+			<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
 			L: CompleteLattice,
 	{
 		let mut new = FifoWorklist{list: Vec::new()};
