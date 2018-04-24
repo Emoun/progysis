@@ -1,6 +1,5 @@
 
-use common::{ConstraintSystem, ConstraintSystemGraph};
-use core::CompleteLattice;
+use core::{ConstraintSystem, ConstraintSystemGraph,CompleteLattice};
 use graphene::core::*;
 
 

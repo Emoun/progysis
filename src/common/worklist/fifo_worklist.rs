@@ -1,8 +1,7 @@
 use super::*;
 
 use std::vec::Vec;
-use common::{ConstraintSystem, ConstraintSystemGraph};
-use core::CompleteLattice;
+use core::{ConstraintSystem, ConstraintSystemGraph, CompleteLattice, Worklist};
 use graphene::core::*;
 
 pub struct FifoWorklist

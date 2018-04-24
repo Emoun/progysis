@@ -1,7 +1,7 @@
 use super::*;
 
 use ::common::lattices::{Sign, SignPowerSet, StringSignTFSpace};
-use progysis::common::{ConstraintSystem, MonotoneFunction};
+use progysis::core::{ConstraintSystem};
 use progysis::common::worklist::FifoWorklist;
 use graphene::core::{BaseGraph, EdgeWeightedGraph};
 use graphene::common::AdjListGraph;

@@ -1,8 +1,7 @@
 
 
 use graphene::core::*;
-use ::core::{Element, CompleteLattice};
-use ::common::worklist::Worklist;
+use ::core::{Element, CompleteLattice,Worklist};
 
 use std::collections::HashMap;
 
