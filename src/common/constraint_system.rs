@@ -9,9 +9,11 @@ use std::iter::FromIterator;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
+///
+/// Trait alias
+///
 pub trait ConstraintSystemGraph<A>:
 	EdgeWeightedGraph<EdgeWeight=A> +
-	WeightedGraph<Weight=A,WeightRef=<Self as BaseGraph>::Edge> +
 	BaseGraph<Vertex=u32>
 	where
 		<Self as BaseGraph>::VertexIter: IdIter<u32>,
@@ -20,7 +22,6 @@ pub trait ConstraintSystemGraph<A>:
 impl<A,G> ConstraintSystemGraph<A> for G
 	where
 		G: 	EdgeWeightedGraph<EdgeWeight=A> +
-			WeightedGraph<Weight=A,WeightRef=<Self as BaseGraph>::Edge> +
 			BaseGraph<Vertex=u32>,
 		<Self as BaseGraph>::VertexIter: IdIter<u32>,
 		<Self as BaseGraph>::EdgeIter: IdIter<(u32,u32,<Self as BaseGraph>::Edge)>
