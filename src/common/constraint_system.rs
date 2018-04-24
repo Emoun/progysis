@@ -1,13 +1,10 @@
 
 
 use graphene::core::*;
-use graphene::common::*;
 use ::core::{Element, CompleteLattice};
 use ::common::worklist::Worklist;
-use std::iter::FromIterator;
 
 use std::collections::HashMap;
-use std::marker::PhantomData;
 
 ///
 /// Trait alias
@@ -70,11 +67,27 @@ impl<G,L,A> ConstraintSystem<G,L,A>
 		}
 	}
 	
+	///
+	/// The states set in the initial values are assumed to be the initial states,
+	/// and the values are their initial values.
+	/// The initial state's function spaces do not have to have entries to every variable.
+	/// The other states must not have any entries in the initial state map.
+	///
+	///
+	///
 	pub fn solve<W>(&self, initial_values: &mut HashMap<u32,Element<L>>)
 		where
 			W: Worklist
 	{
 		let mut worklist = W::initialize(self);
+		
+		// Initialize all states
+		for i in self.graph.all_vertices(){
+			if !initial_values.contains_key(&i) {
+				initial_values.insert(i, Element::bottom());
+			}
+		}
+		
 		while let Some(fv) = worklist.next(){
 			let new_value = self.evaluate_flow_variable(fv, initial_values);
 			if new_value != initial_values[&fv] {

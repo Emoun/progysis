@@ -18,8 +18,6 @@ fn solve_test()
 {
 	let mut map: HashMap<u32,_> = HashMap::new();
 	map.insert(0, Element::new(1));
-	map.insert(1, Element::bottom());
-	map.insert(2, Element::bottom());
 	
 	let mut cs_graph = AdjListGraph::empty_graph();
 	cs_graph.add_vertex(0).unwrap();
