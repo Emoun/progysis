@@ -26,6 +26,16 @@ fn comparison_test(){
 	f1.add_key("v1");
 	f2["v1"] = Element::singleton(Sign::Zero);
 	assert!( f1 < f2, "{:?} >= {:?}", f1, f2 );
+	assert_ne!( f1, f2);
+}
+
+#[test]
+fn comparison_test_2(){
+	let f1 = Element::<StringSignTFSpace>::bottom();
+	let mut f2 = Element::<StringSignTFSpace>::bottom();
+	f2["v1"] = Element::singleton(Sign::Zero);
+	assert!( f1 < f2, "{:?} >= {:?}", f1, f2 );
+	assert_ne!( f1, f2);
 }
 
 #[test]

@@ -32,7 +32,8 @@ pub struct ConstraintSystem<G,L,A>
 		L: CompleteLattice,
 {
 	pub graph: G,
-	func: fn(&Element<L>, &A) -> Element<L>
+	func: fn(&Element<L>, &A) -> Element<L>,
+	forward: bool
 }
 
 impl<G,L,A> ConstraintSystem<G,L,A>
@@ -42,21 +43,20 @@ impl<G,L,A> ConstraintSystem<G,L,A>
 		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
 		L: CompleteLattice,
 {
-	pub fn new(graph: G, func: fn(&Element<L>, &A) -> Element<L>) -> Self
+	pub fn new(graph: G, func: fn(&Element<L>, &A) -> Element<L>, forward: bool) -> Self
 	{
-		Self{graph, func}
+		Self{graph, func, forward}
 	}
 	
 	fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<L>>)
 		-> Element<L>
 	{
-		let all_edges_iter = self.graph.all_edges().into_iter();
-		let mut sourced_in_fv = all_edges_iter.filter(|e| *e.source() == fv);
-		
-		if let Some(first_edge) = sourced_in_fv.next(){
-			let mut result = (self.func)(&values[&first_edge.sink()], self.graph.weight_of(first_edge).unwrap());
-			for e in sourced_in_fv {
-				result += (self.func)(&values[&e.sink()], self.graph.weight_of(first_edge).unwrap());
+		let dependencies = self.fv_dependencies(fv);
+		let mut dependencies_iter = dependencies.iter();
+		if let Some(first_edge) = dependencies_iter.next(){
+			let mut result = (self.func)(&values[&first_edge.0], self.graph.weight_ref(first_edge.1).unwrap());
+			while let Some(e) = dependencies_iter.next() {
+				result += (self.func)(&values[&e.0], self.graph.weight_ref(e.1).unwrap());
 			}
 			result
 		}else{
@@ -64,6 +64,27 @@ impl<G,L,A> ConstraintSystem<G,L,A>
 			// Therefore, just return whatever values the map
 			// give	s it
 			values[&fv].clone()
+		}
+	}
+	
+	/// The flow variables that depend on the given flow variable.
+	fn fv_dependentants(&self, fv: u32) -> Vec<(u32,G::Edge)>
+	{
+		self.adjacent(fv, self.forward)
+	}
+	
+	/// The flow variables the given flow variable is dependent on.
+	fn fv_dependencies(&self, fv: u32) -> Vec<(u32,G::Edge)>
+	{
+		self.adjacent(fv, !self.forward)
+	}
+	
+	fn adjacent(&self, fv: u32, outgoing: bool) -> Vec<(u32, G::Edge)>
+	{
+		if outgoing {
+			self.graph.edges_sourced_in(fv).into_iter().map(|e| (*e.sink(),*e.edge())).collect()
+		}else{
+			self.graph.edges_sinked_in(fv).into_iter().map(|e| (*e.source(),*e.edge())).collect()
 		}
 	}
 	
@@ -91,7 +112,9 @@ impl<G,L,A> ConstraintSystem<G,L,A>
 		while let Some(fv) = worklist.next(){
 			let new_value = self.evaluate_flow_variable(fv, initial_values);
 			if new_value != initial_values[&fv] {
-				worklist.insert(fv);
+				for (dependant,_) in self.fv_dependentants(fv){
+					worklist.insert(dependant);
+				}
 				initial_values.insert(fv, new_value);
 			}
 		}

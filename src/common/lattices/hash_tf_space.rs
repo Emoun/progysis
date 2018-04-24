@@ -87,22 +87,30 @@ impl<'a,K,E> PartialOrd for HashTFSpace<'a,K,E>
 	fn lt(&self, other: &Self) -> bool
 	{
 		for_each_pair(self, other,
-					  |s_e, o_e| s_e < o_e)
+					  |s_e, o_e| s_e < o_e,
+					  |s| s.is_bottom(),
+					  |_| true)
 	}
 	fn le(&self, other: &Self) -> bool
 	{
 		for_each_pair(self, other,
-					  |s_e, o_e| s_e <= o_e)
+					  |s_e, o_e| s_e <= o_e,
+					  |s| s.is_bottom(),
+					  |_| true)
 	}
 	fn gt(&self, other: &Self) -> bool
 	{
 		for_each_pair(self, other,
-					  |s_e, o_e| s_e > o_e)
+					  |s_e, o_e| s_e > o_e,
+					  |_| true,
+					  |o| o.is_bottom())
 	}
 	fn ge(&self, other: &Self) -> bool
 	{
 		for_each_pair(self, other,
-					  |s_e, o_e| s_e >= o_e)
+					  |s_e, o_e| s_e >= o_e,
+					  |_| true,
+					  |o| o.is_bottom())
 	}
 }
 
@@ -114,8 +122,26 @@ impl<'a,K,E> PartialEq for HashTFSpace<'a,K,E>
 	fn eq(&self, other:&Self) -> bool
 	{
 		for k in self.keys(){
-			if self[k] != other[k] {
-				return false;
+			if let Some(o) = other.map.get(&k){
+				if self[k] != *o {
+					return false;
+				}
+			}else{
+				if !self[k].is_bottom() {
+					return false;
+				}
+			}
+		}
+		//Check reflexive
+		for k in other.keys(){
+			if let Some(s) = self.map.get(&k){
+				if other[k] != *s {
+					return false;
+				}
+			}else{
+				if !other[k].is_bottom() {
+					return false;
+				}
 			}
 		}
 		true
@@ -155,23 +181,39 @@ impl<'a,K,E> IndexMut<K> for HashTFSpace<'a,K,E>
 ///
 /// Ensures that both arguments have the same keys, and that `f` holds for all
 /// all value pairs (one from each argument) for all the keys.
+/// If 'l' has key that isn't in 'r', 'd1' must hold for 'l's value
+/// If 'r' has key that isn't in 'l', 'd2' must hold for 'r's value
 ///
-fn for_each_pair<'a,K,E,F>(l: &HashTFSpace<'a,K,E>, r: &HashTFSpace<'a,K,E>, f: F) -> bool
+fn for_each_pair<'a,K,E,F,D1,D2>(l: &HashTFSpace<'a,K,E>, r: &HashTFSpace<'a,K,E>, f: F, d1: D1, d2: D2) -> bool
 	where
 		K: 'a + HashTFSpaceKey,
 		E: 'a + HashTFSpaceElement,
-		F: Fn(&E,&E) -> bool
+		F: Fn(&E,&E) -> bool,
+		D1: Fn(&E) -> bool,
+		D2: Fn(&E) -> bool
 {
 	// Check that all the elements in left accept f() for their right counterparts
 	for s_key in l.keys() {
-		if !f(&l[s_key].inner, &r[s_key].inner) {
-			return false;
+		if let Some(o) = r.map.get(&s_key){
+			if !f(&l[s_key].inner, &o.inner) {
+				return false;
+			}
+		}else{
+			if !d1(&l[s_key].inner) {
+				return false;
+			}
 		}
 	}
 	// Check that all the elements in right accept f() for their left counterparts
 	for o_key in r.keys() {
-		if !f(&l[o_key].inner, &r[o_key].inner) {
-			return false;
+		if let Some(s) = l.map.get(&o_key){
+			if !f(&s.inner, &r[o_key].inner) {
+				return false;
+			}
+		}else {
+			if !d2(&r[o_key].inner) {
+				return false;
+			}
 		}
 	}
 	// No inconsistencies were found
