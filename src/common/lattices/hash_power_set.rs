@@ -1,7 +1,12 @@
 
-use std::cmp::Ordering;
-use std::collections::HashSet;
-use std::hash::Hash;
+use std::{
+	convert::{
+		From, Into
+	},
+	cmp::Ordering,
+	collections::HashSet,
+	hash::Hash,
+};
 use ::core::{CompleteLattice, Element, PowerSet, Evaluable, PowerSetItem};
 
 trait_alias!(HashPowerSetItem: PowerSetItem, Hash);
@@ -11,7 +16,7 @@ pub struct HashPowerSet<E>
 	where
 		E: HashPowerSetItem
 {
-	pub set: HashSet<E>
+	set: HashSet<E>
 }
 
 impl<E> PowerSet for HashPowerSet<E>
@@ -109,7 +114,23 @@ impl<E> PartialEq for HashPowerSet<E>
 	}
 }
 
+impl<E> From<HashSet<E>> for HashPowerSet<E>
+	where E: HashPowerSetItem
+{
+	fn from(set: HashSet<E>) -> Self
+	{
+		Self{set}
+	}
+}
 
+impl<E> Into<HashSet<E>> for HashPowerSet<E>
+	where E: HashPowerSetItem
+{
+	fn into(self) -> HashSet<E>
+	{
+		self.set
+	}
+}
 
 // Helper functions
 
