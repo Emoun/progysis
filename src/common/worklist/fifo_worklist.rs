@@ -1,8 +1,12 @@
-use super::*;
 
 use std::vec::Vec;
 use core::{ConstraintSystem, ConstraintSystemGraph, CompleteLattice, Worklist};
-use graphene::core::*;
+use graphene::core::{
+	BaseGraph,
+	trait_aliases::{
+		IntoFromIter
+	}
+};
 
 pub struct FifoWorklist
 {
@@ -19,8 +23,8 @@ impl Worklist for FifoWorklist
 	fn initialize<G,L,A>(cs: &ConstraintSystem<G,L,A>) -> Self
 		where
 			G: ConstraintSystemGraph<A>,
-			<G as BaseGraph>::VertexIter: IdIter<u32>,
-			<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
+			<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+			<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 			L: CompleteLattice,
 	{
 		let mut new = FifoWorklist{list: Vec::new()};

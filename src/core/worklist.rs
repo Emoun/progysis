@@ -1,6 +1,13 @@
 
-use core::{ConstraintSystem, ConstraintSystemGraph,CompleteLattice};
-use graphene::core::*;
+use core::{
+	ConstraintSystem, ConstraintSystemGraph,CompleteLattice
+};
+use graphene::core::{
+	BaseGraph,
+	trait_aliases::{
+		IntoFromIter
+	}
+};
 
 
 pub trait Worklist: Iterator<Item=u32>
@@ -10,7 +17,7 @@ pub trait Worklist: Iterator<Item=u32>
 	fn initialize<G,L,A>(cs: &ConstraintSystem<G,L,A>) -> Self
 		where
 			G: ConstraintSystemGraph<A>,
-			<G as BaseGraph>::VertexIter: IdIter<u32>,
-			<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
+			<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+			<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 			L: CompleteLattice;
 }

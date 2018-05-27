@@ -1,7 +1,14 @@
 
 
-use graphene::core::*;
-use ::core::{Element, CompleteLattice,Worklist};
+use graphene::core::{
+	BaseGraph, EdgeWeightedGraph, Edge,
+	trait_aliases::{
+		IntoFromIter
+	}
+};
+use ::core::{
+	Element, CompleteLattice,Worklist
+};
 
 use std::collections::HashMap;
 
@@ -12,22 +19,22 @@ pub trait ConstraintSystemGraph<A>:
 	EdgeWeightedGraph<EdgeWeight=A> +
 	BaseGraph<Vertex=u32>
 	where
-		<Self as BaseGraph>::VertexIter: IdIter<u32>,
-		<Self as BaseGraph>::EdgeIter: IdIter<(u32,u32,<Self as BaseGraph>::Edge)>
+		<Self as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<Self as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<Self as BaseGraph>::EdgeId)>
 {}
 impl<A,G> ConstraintSystemGraph<A> for G
 	where
 		G: 	EdgeWeightedGraph<EdgeWeight=A> +
 			BaseGraph<Vertex=u32>,
-		<Self as BaseGraph>::VertexIter: IdIter<u32>,
-		<Self as BaseGraph>::EdgeIter: IdIter<(u32,u32,<Self as BaseGraph>::Edge)>
+		<Self as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<Self as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<Self as BaseGraph>::EdgeId)>
 {}
 
 pub struct ConstraintSystem<G,L,A>
 	where
 		G: ConstraintSystemGraph<A>,
-		<G as BaseGraph>::VertexIter: IdIter<u32>,
-		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
+		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 		L: CompleteLattice,
 {
 	pub graph: G,
@@ -38,8 +45,8 @@ pub struct ConstraintSystem<G,L,A>
 impl<G,L,A> ConstraintSystem<G,L,A>
 	where
 		G: ConstraintSystemGraph<A>,
-		<G as BaseGraph>::VertexIter: IdIter<u32>,
-		<G as BaseGraph>::EdgeIter: IdIter<(u32,u32,<G as BaseGraph>::Edge)>,
+		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 		L: CompleteLattice,
 {
 	pub fn new(graph: G, func: fn(&Element<L>, &A) -> Element<L>, forward: bool) -> Self
@@ -67,23 +74,23 @@ impl<G,L,A> ConstraintSystem<G,L,A>
 	}
 	
 	/// The flow variables that depend on the given flow variable.
-	fn fv_dependentants(&self, fv: u32) -> Vec<(u32,G::Edge)>
+	fn fv_dependentants(&self, fv: u32) -> Vec<(u32,G::EdgeId)>
 	{
 		self.adjacent(fv, self.forward)
 	}
 	
 	/// The flow variables the given flow variable is dependent on.
-	fn fv_dependencies(&self, fv: u32) -> Vec<(u32,G::Edge)>
+	fn fv_dependencies(&self, fv: u32) -> Vec<(u32,G::EdgeId)>
 	{
 		self.adjacent(fv, !self.forward)
 	}
 	
-	fn adjacent(&self, fv: u32, outgoing: bool) -> Vec<(u32, G::Edge)>
+	fn adjacent(&self, fv: u32, outgoing: bool) -> Vec<(u32, G::EdgeId)>
 	{
 		if outgoing {
-			self.graph.edges_sourced_in(fv).into_iter().map(|e| (*e.sink(),*e.edge())).collect()
+			self.graph.edges_sourced_in(fv).into_iter().map(|e| (*e.sink(),*e.id())).collect()
 		}else{
-			self.graph.edges_sinked_in(fv).into_iter().map(|e| (*e.source(),*e.edge())).collect()
+			self.graph.edges_sinked_in(fv).into_iter().map(|e| (*e.source(),*e.id())).collect()
 		}
 	}
 	
