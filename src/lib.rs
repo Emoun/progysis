@@ -9,7 +9,6 @@
 //!
 //!
 //!
-#[macro_use]
 extern crate graphene;
 
 #[macro_use]

@@ -20,9 +20,6 @@ use std::{
 	marker::PhantomData
 };
 
-
-
-
 pub struct U32Analysis {}
 
 impl Analysis for U32Analysis
@@ -55,9 +52,7 @@ fn solve_test()
 	program.add_edge_weighted((0, 1), 1).unwrap();
 	program.add_edge_weighted((1, 2), 2).unwrap();
 	
-	let cs = ConstraintSystem::<_, U32Analysis>::new(program);
-	
-	cs.solve::<FifoWorklist>(&mut map);
+	program.analyze::<U32Analysis,FifoWorklist>(&mut map);
 	
 	assert_eq!(1, map[&0].inner);
 	assert_eq!(2, map[&1].inner);
@@ -150,11 +145,10 @@ fn solve_tf_space()
 	g.add_edge_weighted((5,6),Action::Skip).unwrap();
 	g.add_edge_weighted((5,1),Action::Skip).unwrap();
 	
-	let cs = ConstraintSystem::<_, SignAnalysis>::new(g);
 	let mut initial = HashMap::new();
 	initial.insert(0, Element::bottom());
 	
-	cs.solve::<FifoWorklist>(&mut initial);
+	g.analyze::<SignAnalysis,FifoWorklist>(&mut initial);
 	
 	let top = Element::from_iter(vec![Plus,Minus,Zero]);
 	let plus_zero = Element::from_iter(vec![Plus, Zero]);
