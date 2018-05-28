@@ -8,9 +8,21 @@ use graphene::common::AdjListGraph;
 use std::collections::HashMap;
 
 
-fn add(e: &Element<u32>, action: &u32) -> Element<u32>
+
+
+pub struct U32Analysis {}
+
+impl Analysis<u32, u32> for U32Analysis
 {
-	Element::new(e.inner + action)
+	fn transfer(e: &Element<u32>, action: &u32) -> Element<u32>
+	{
+		Element::new(e.inner + action)
+	}
+	
+	fn direction() -> AnalysisDirection
+	{
+		AnalysisDirection::Forward
+	}
 }
 
 #[test]
@@ -27,7 +39,7 @@ fn solve_test()
 	program.add_edge_weighted((0, 1), 1).unwrap();
 	program.add_edge_weighted((1, 2), 2).unwrap();
 	
-	let cs = ConstraintSystem::new(program, add, true);
+	let cs = ConstraintSystem::<_,_,_, U32Analysis>::new(program);
 	
 	cs.solve::<FifoWorklist>(&mut map);
 	
@@ -46,47 +58,56 @@ enum Action{
 	ReadY,
 }
 
-fn transfer<'a>(init: &Element<StringSignTFSpace<'a>>, acc: &Action) -> Element<StringSignTFSpace<'a>>
+pub struct SignAnalysis{}
+impl<'a> Analysis<StringSignTFSpace<'a>, Action> for SignAnalysis
 {
-	use self::Action::*;
-	use self::Sign::*;
-	let mut result = init.clone();
-	match *acc {
-		DeclareX => {
-			result["x"] = Element::from_iter(
-				vec![Plus, Minus, Zero]
-			);
-		},
-		IncX => {
-			let x = if result.has_key("x"){ result["x"].clone()}else{Element::bottom()};
-			result["x"] =
-				if x >= Element::singleton(Minus){
-					if x >= Element::singleton(Zero){
-						x + Element::singleton(Plus)
+	fn transfer(init: &Element<StringSignTFSpace<'a>>, acc: &Action) -> Element<StringSignTFSpace<'a>>
+	{
+		use self::Action::*;
+		use self::Sign::*;
+		let mut result = init.clone();
+		match *acc {
+			DeclareX => {
+				result["x"] = Element::from_iter(
+					vec![Plus, Minus, Zero]
+				);
+			},
+			IncX => {
+				let x = if result.has_key("x"){ result["x"].clone()}else{Element::bottom()};
+				result["x"] =
+					if x >= Element::singleton(Minus){
+						if x >= Element::singleton(Zero){
+							x + Element::singleton(Plus)
+						}else{
+							x + Element::singleton(Zero)
+						}
+					}else if x >= Element::singleton(Zero){
+						Element::singleton(Plus)
 					}else{
-						x + Element::singleton(Zero)
+						x
 					}
-				}else if x >= Element::singleton(Zero){
-					Element::singleton(Plus)
-				}else{
-					x
-				}
-			;
-		},
-		YIsMinus1 => {
-			result["y"] =Element::singleton(Minus);
-		},
-		XIs0 => {
-			result["x"] = Element::singleton(Zero);
-		},
-		ReadY | DeclareY => {
-			result["y"] = Element::from_iter(
-				vec![Plus, Minus, Zero]
-			);
-		},
-		_ => (),
+				;
+			},
+			YIsMinus1 => {
+				result["y"] =Element::singleton(Minus);
+			},
+			XIs0 => {
+				result["x"] = Element::singleton(Zero);
+			},
+			ReadY | DeclareY => {
+				result["y"] = Element::from_iter(
+					vec![Plus, Minus, Zero]
+				);
+			},
+			_ => (),
+		}
+		result
 	}
-	result
+	
+	fn direction() -> AnalysisDirection
+	{
+		AnalysisDirection::Forward
+	}
 }
 
 #[test]
@@ -106,7 +127,7 @@ fn solve_tf_space()
 	g.add_edge_weighted((5,6),Action::Skip).unwrap();
 	g.add_edge_weighted((5,1),Action::Skip).unwrap();
 	
-	let cs = ConstraintSystem::new(g, transfer,true);
+	let cs = ConstraintSystem::<_,_,_, SignAnalysis>::new(g);
 	let mut initial = HashMap::new();
 	initial.insert(0, Element::bottom());
 	

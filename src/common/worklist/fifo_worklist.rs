@@ -1,6 +1,8 @@
 
 use std::vec::Vec;
-use core::{ConstraintSystem, ConstraintSystemGraph, CompleteLattice, Worklist};
+use core::{
+	ConstraintSystem, ConstraintSystemGraph, CompleteLattice, Worklist, Analysis
+};
 use graphene::core::{
 	BaseGraph,
 	trait_aliases::{
@@ -20,12 +22,13 @@ impl Worklist for FifoWorklist
 		self.list.push(v);
 	}
 	
-	fn initialize<G,L,A>(cs: &ConstraintSystem<G,L,A>) -> Self
+	fn initialize<G,L,A,N>(cs: &ConstraintSystem<G,L,A,N>) -> Self
 		where
 			G: ConstraintSystemGraph<A>,
 			<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 			<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 			L: CompleteLattice,
+			N: Analysis<L,A>,
 	{
 		let mut new = FifoWorklist{list: Vec::new()};
 		for v in cs.graph.all_vertices().into_iter(){

@@ -1,5 +1,4 @@
 
-
 use graphene::core::{
 	BaseGraph, EdgeWeightedGraph, Edge,
 	trait_aliases::{
@@ -7,10 +6,13 @@ use graphene::core::{
 	}
 };
 use ::core::{
-	Element, CompleteLattice,Worklist
+	Element, CompleteLattice,Worklist, Analysis,
 };
 
-use std::collections::HashMap;
+use std::{
+	collections::HashMap,
+	marker::PhantomData
+};
 
 ///
 /// Trait alias
@@ -30,28 +32,31 @@ impl<A,G> ConstraintSystemGraph<A> for G
 		<Self as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<Self as BaseGraph>::EdgeId)>
 {}
 
-pub struct ConstraintSystem<G,L,A>
+pub struct ConstraintSystem<G,L,A,N>
 	where
 		G: ConstraintSystemGraph<A>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 		L: CompleteLattice,
+		N: Analysis<L,A>,
 {
 	pub graph: G,
-	func: fn(&Element<L>, &A) -> Element<L>,
-	forward: bool
+	pha1: PhantomData<L>,
+	pha2: PhantomData<A>,
+	pha3: PhantomData<N>,
 }
 
-impl<G,L,A> ConstraintSystem<G,L,A>
+impl<G,L,A,N> ConstraintSystem<G,L,A,N>
 	where
 		G: ConstraintSystemGraph<A>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 		L: CompleteLattice,
+		N: Analysis<L,A>,
 {
-	pub fn new(graph: G, func: fn(&Element<L>, &A) -> Element<L>, forward: bool) -> Self
+	pub fn new(graph: G) -> Self
 	{
-		Self{graph, func, forward}
+		Self{graph, pha1: PhantomData, pha2: PhantomData, pha3: PhantomData}
 	}
 	
 	fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<L>>)
@@ -60,9 +65,9 @@ impl<G,L,A> ConstraintSystem<G,L,A>
 		let dependencies = self.fv_dependencies(fv);
 		let mut dependencies_iter = dependencies.iter();
 		if let Some(first_edge) = dependencies_iter.next(){
-			let mut result = (self.func)(&values[&first_edge.0], self.graph.weight_ref(first_edge.1).unwrap());
+			let mut result = N::transfer(&values[&first_edge.0], self.graph.weight_ref(first_edge.1).unwrap());
 			while let Some(e) = dependencies_iter.next() {
-				result += (self.func)(&values[&e.0], self.graph.weight_ref(e.1).unwrap());
+				result += N::transfer(&values[&e.0], self.graph.weight_ref(e.1).unwrap());
 			}
 			result
 		}else{
@@ -76,13 +81,23 @@ impl<G,L,A> ConstraintSystem<G,L,A>
 	/// The flow variables that depend on the given flow variable.
 	fn fv_dependentants(&self, fv: u32) -> Vec<(u32,G::EdgeId)>
 	{
-		self.adjacent(fv, self.forward)
+		use core::AnalysisDirection::*;
+		match N::direction(){
+			Forward => self.adjacent(fv, true),
+			Backward => self.adjacent(fv, false),
+			_ => unimplemented!()
+		}
 	}
 	
 	/// The flow variables the given flow variable is dependent on.
 	fn fv_dependencies(&self, fv: u32) -> Vec<(u32,G::EdgeId)>
 	{
-		self.adjacent(fv, !self.forward)
+		use core::AnalysisDirection::*;
+		match N::direction(){
+			Forward => self.adjacent(fv, false),
+			Backward => self.adjacent(fv, true),
+			_ => unimplemented!()
+		}
 	}
 	
 	fn adjacent(&self, fv: u32, outgoing: bool) -> Vec<(u32, G::EdgeId)>
