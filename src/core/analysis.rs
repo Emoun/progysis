@@ -9,10 +9,12 @@ pub enum AnalysisDirection{
 	Both
 }
 
-pub trait Analysis<L,A>
-	where L: CompleteLattice
+pub trait Analysis
 {
-	fn transfer(&Element<L>, &A) -> Element<L>;
+	type Lattice: CompleteLattice;
+	type Action;
+	
+	fn transfer(&Element<Self::Lattice>, &Self::Action) -> Element<Self::Lattice>;
 	
 	fn direction() -> AnalysisDirection;
 }

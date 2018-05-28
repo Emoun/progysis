@@ -1,19 +1,35 @@
 use super::*;
 
-use ::common::lattices::{Sign, SignPowerSet, StringSignTFSpace};
-use progysis::core::{ConstraintSystem};
-use progysis::common::worklist::FifoWorklist;
-use graphene::core::{BaseGraph, EdgeWeightedGraph};
-use graphene::common::AdjListGraph;
-use std::collections::HashMap;
+use ::common::lattices::{
+	Sign, SignPowerSet, StringSignTFSpace
+};
+use progysis::{
+	core::{
+		ConstraintSystem
+	},
+	common::worklist::FifoWorklist
+};
+use graphene::{
+	core::{
+		BaseGraph, EdgeWeightedGraph
+	},
+	common::AdjListGraph
+};
+use std::{
+	collections::HashMap,
+	marker::PhantomData
+};
 
 
 
 
 pub struct U32Analysis {}
 
-impl Analysis<u32, u32> for U32Analysis
+impl Analysis for U32Analysis
 {
+	type Lattice = u32;
+	type Action = u32;
+	
 	fn transfer(e: &Element<u32>, action: &u32) -> Element<u32>
 	{
 		Element::new(e.inner + action)
@@ -39,7 +55,7 @@ fn solve_test()
 	program.add_edge_weighted((0, 1), 1).unwrap();
 	program.add_edge_weighted((1, 2), 2).unwrap();
 	
-	let cs = ConstraintSystem::<_,_,_, U32Analysis>::new(program);
+	let cs = ConstraintSystem::<_, U32Analysis>::new(program);
 	
 	cs.solve::<FifoWorklist>(&mut map);
 	
@@ -58,9 +74,16 @@ enum Action{
 	ReadY,
 }
 
-pub struct SignAnalysis{}
-impl<'a> Analysis<StringSignTFSpace<'a>, Action> for SignAnalysis
+struct SignAnalysis<'a>
 {
+	pha: PhantomData<&'a u8>
+}
+
+impl<'a> Analysis for SignAnalysis<'a>
+{
+	type Lattice = StringSignTFSpace<'a>;
+	type Action = Action;
+	
 	fn transfer(init: &Element<StringSignTFSpace<'a>>, acc: &Action) -> Element<StringSignTFSpace<'a>>
 	{
 		use self::Action::*;
@@ -127,7 +150,7 @@ fn solve_tf_space()
 	g.add_edge_weighted((5,6),Action::Skip).unwrap();
 	g.add_edge_weighted((5,1),Action::Skip).unwrap();
 	
-	let cs = ConstraintSystem::<_,_,_, SignAnalysis>::new(g);
+	let cs = ConstraintSystem::<_, SignAnalysis>::new(g);
 	let mut initial = HashMap::new();
 	initial.insert(0, Element::bottom());
 	

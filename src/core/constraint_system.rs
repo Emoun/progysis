@@ -32,35 +32,31 @@ impl<A,G> ConstraintSystemGraph<A> for G
 		<Self as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<Self as BaseGraph>::EdgeId)>
 {}
 
-pub struct ConstraintSystem<G,L,A,N>
+pub struct ConstraintSystem<G,N>
 	where
-		G: ConstraintSystemGraph<A>,
+		G: ConstraintSystemGraph<N::Action>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice,
-		N: Analysis<L,A>,
+		N: Analysis,
 {
 	pub graph: G,
-	pha1: PhantomData<L>,
-	pha2: PhantomData<A>,
-	pha3: PhantomData<N>,
+	pha: PhantomData<N>,
 }
 
-impl<G,L,A,N> ConstraintSystem<G,L,A,N>
+impl<G,N> ConstraintSystem<G,N>
 	where
-		G: ConstraintSystemGraph<A>,
+		G: ConstraintSystemGraph<N::Action>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice,
-		N: Analysis<L,A>,
+		N: Analysis,
 {
 	pub fn new(graph: G) -> Self
 	{
-		Self{graph, pha1: PhantomData, pha2: PhantomData, pha3: PhantomData}
+		Self{graph, pha: PhantomData}
 	}
 	
-	fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<L>>)
-		-> Element<L>
+	fn evaluate_flow_variable(&self, fv: u32, values: &HashMap<u32,Element<N::Lattice>>)
+		-> Element<N::Lattice>
 	{
 		let dependencies = self.fv_dependencies(fv);
 		let mut dependencies_iter = dependencies.iter();
@@ -117,7 +113,7 @@ impl<G,L,A,N> ConstraintSystem<G,L,A,N>
 	///
 	///
 	///
-	pub fn solve<W>(&self, initial_values: &mut HashMap<u32,Element<L>>)
+	pub fn solve<W>(&self, initial_values: &mut HashMap<u32,Element<N::Lattice>>)
 		where
 			W: Worklist
 	{
