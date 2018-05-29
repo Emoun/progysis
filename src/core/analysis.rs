@@ -14,7 +14,7 @@ pub trait Analysis
 	type Lattice: CompleteLattice;
 	type Action;
 	
-	fn transfer(&Element<Self::Lattice>, &Self::Action) -> Element<Self::Lattice>;
+	const DIRECTION: AnalysisDirection;
 	
-	fn direction() -> AnalysisDirection;
+	fn transfer(&Element<Self::Lattice>, &Self::Action) -> Element<Self::Lattice>;
 }

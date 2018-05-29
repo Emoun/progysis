@@ -74,7 +74,7 @@ fn fv_dependentants<G,N>(g: &G, fv: u32) -> Vec<(u32,G::EdgeId)>
 		N: Analysis<Action=G::EdgeWeight>,
 {
 	use core::AnalysisDirection::*;
-	match N::direction(){
+	match N::DIRECTION{
 		Forward => adjacent(g, fv, true),
 		Backward => adjacent(g, fv, false),
 		_ => unimplemented!()
@@ -90,7 +90,7 @@ fn fv_dependencies<G,N>(g: &G, fv: u32) -> Vec<(u32,G::EdgeId)>
 		N: Analysis<Action=G::EdgeWeight>,
 {
 	use core::AnalysisDirection::*;
-	match N::direction(){
+	match N::DIRECTION{
 		Forward => adjacent(g, fv, false),
 		Backward => adjacent(g, fv, true),
 		_ => unimplemented!()
