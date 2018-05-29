@@ -1,7 +1,7 @@
 
 use std::vec::Vec;
 use core::{
-	ConstraintSystem, Worklist, Analysis
+	ConstraintSystem, Worklist, Analysis, Direction
 };
 use graphene::core::{
 	BaseGraph,
@@ -17,7 +17,7 @@ pub struct FifoWorklist
 
 impl Worklist for FifoWorklist
 {
-	fn insert(&mut self, v: u32)
+	fn insert(&mut self, v: u32, _: Direction)
 	{
 		self.list.push(v);
 	}
@@ -31,7 +31,7 @@ impl Worklist for FifoWorklist
 	{
 		let mut new = FifoWorklist{list: Vec::new()};
 		for v in g.all_vertices().into_iter(){
-			new.insert(v);
+			new.insert(v,N::DIRECTION);
 		}
 		new
 	}

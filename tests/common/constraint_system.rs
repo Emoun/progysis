@@ -26,7 +26,7 @@ impl Analysis for U32Analysis
 {
 	type Lattice = u32;
 	type Action = u32;
-	const DIRECTION:AnalysisDirection = AnalysisDirection::Forward;
+	const DIRECTION: Direction = Direction::Forward;
 	
 	fn transfer(e: &Element<u32>, action: &u32) -> Element<u32>
 	{
@@ -75,7 +75,7 @@ impl<'a> Analysis for SignAnalysis<'a>
 {
 	type Lattice = StringSignTFSpace<'a>;
 	type Action = Action;
-	const DIRECTION: AnalysisDirection = AnalysisDirection::Forward;
+	const DIRECTION: Direction = Direction::Forward;
 	
 	
 	fn transfer(init: &Element<StringSignTFSpace<'a>>, acc: &Action) -> Element<StringSignTFSpace<'a>>

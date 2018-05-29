@@ -1,6 +1,6 @@
 
 use core::{
-	ConstraintSystem, Analysis
+	ConstraintSystem, Analysis, Direction
 };
 use graphene::core::{
 	BaseGraph,
@@ -12,7 +12,7 @@ use graphene::core::{
 
 pub trait Worklist: Iterator<Item=u32>
 {
-	fn insert(&mut self, v: u32);
+	fn insert(&mut self, v: u32, d: Direction);
 	
 	fn initialize<G,N>(cs: &G) -> Self
 		where
