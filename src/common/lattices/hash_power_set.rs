@@ -7,7 +7,7 @@ use std::{
 	collections::HashSet,
 	hash::Hash,
 };
-use ::core::{CompleteLattice, Element, PowerSet, Evaluable, PowerSetItem};
+use ::core::{CompleteLattice, PowerSet, PowerSetItem};
 
 trait_alias!(HashPowerSetItem: PowerSetItem, Hash);
 
@@ -59,22 +59,6 @@ impl<E> CompleteLattice for HashPowerSet<E>
 				self.set.insert(e.clone());
 			}
 		}
-	}
-}
-
-impl<E> Evaluable for HashPowerSet<E>
-	where
-		E: HashPowerSetItem
-{
-	type Value = Self;
-	fn evaluate(&self) -> Element<Self::Value>
-	{
-		Element::new(self.clone())
-	}
-	
-	fn consume(self) -> Element<Self::Value>
-	{
-		Element::new(self)
 	}
 }
 
