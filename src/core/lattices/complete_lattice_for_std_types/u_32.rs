@@ -13,12 +13,6 @@ impl CompleteLattice for u32
 		*self == 0
 	}
 	
-	fn join(&mut self, other: &Self)
-	{
-		if *self < *other {
-			*self = *other;
-		}
-	}
 }
 
 impl CompleteLattice for u64
@@ -33,10 +27,4 @@ impl CompleteLattice for u64
 		*self == 0
 	}
 	
-	fn join(&mut self, other: &Self)
-	{
-		if *self < *other {
-			*self = *other;
-		}
-	}
 }

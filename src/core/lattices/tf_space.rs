@@ -1,6 +1,8 @@
 use super::*;
 
-use std::ops::{Index, IndexMut};
+use std::ops::{
+	Index, IndexMut
+};
 
 trait_alias!(TFSpaceKey: Copy, Eq);
 trait_alias!(TFSpaceElement: CompleteLattice);
@@ -21,7 +23,7 @@ trait_alias!(TFSpaceElement: CompleteLattice);
 /// * Index
 /// * IndexMut: Must not fail. If an index is present in the object it should be added.
 ///
-pub trait TFSpace<'a,K,E>: CompleteLattice + Index<K, Output=Element<E>> + IndexMut<K>
+pub trait TFSpace<'a,K,E>: CompleteLattice + Index<K, Output=E> + IndexMut<K>
 	where
 		K: TFSpaceKey,
 		E: 'a + TFSpaceElement
@@ -31,61 +33,11 @@ pub trait TFSpace<'a,K,E>: CompleteLattice + Index<K, Output=Element<E>> + Index
 	fn keys(&self) -> Self::Keys;
 	
 	fn add_key(&mut self, k:K){
-		self[k] = Element::bottom();
+		self[k] = E::bottom();
 	}
 	
 	fn has_key(&self, k:K) -> bool
 	{
 		self.keys().any(|key| key == k)
-	}
-}
-
-impl<'a,K,E,T> TFSpace<'a,K,E> for Element<T>
-	where
-		K: TFSpaceKey,
-		E: 'a + TFSpaceElement,
-		T: TFSpace<'a,K,E>
-{
-	type Keys = T::Keys;
-	
-	fn keys(&self) -> Self::Keys
-	{
-		self.inner.keys()
-	}
-	
-	fn add_key(&mut self, k:K){
-		self.inner.add_key(k)
-	}
-	
-	fn has_key(&self, k:K) -> bool
-	{
-		self.inner.has_key(k)
-	}
-	
-}
-
-impl<'a,K,E,T> Index<K> for Element<T>
-	where
-		K: TFSpaceKey,
-		E: 'a + TFSpaceElement,
-		T: TFSpace<'a,K,E> + Index<K, Output=Element<E>>
-{
-	type Output = T::Output;
-	
-	fn index(&self, index: K) -> &Self::Output
-	{
-		&self.inner[index]
-	}
-}
-
-impl<'a,K,E,T> IndexMut<K> for Element<T>
-	where
-		K: TFSpaceKey,
-		E: 'a + TFSpaceElement,
-		T: TFSpace<'a,K,E> + Index<K, Output=Element<E>>
-{
-	fn index_mut(&mut self, index: K) -> &mut Self::Output
-	{
-		&mut self.inner[index]
 	}
 }

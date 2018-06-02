@@ -1,5 +1,5 @@
 
-use ::core::{CompleteLattice,Element};
+use ::core::{CompleteLattice};
 
 trait_alias!{PowerSetItem: Clone, Eq}
 
@@ -48,24 +48,6 @@ pub trait PowerSet: CompleteLattice
 			result.add_assign(Self::singleton(v));
 		}
 		result
-	}
-}
-
-
-impl<T> PowerSet for Element<T>
-	where
-		T: PowerSet
-{
-	type Item = T::Item;
-	type All = T::All;
-	
-	fn singleton(s: Self::Item) -> Self
-	{
-		Element::new(T::singleton(s))
-	}
-	
-	fn all(&self) -> Self::All{
-		self.inner.all()
 	}
 }
 

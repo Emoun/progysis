@@ -6,8 +6,13 @@ use std::{
 	cmp::Ordering,
 	collections::HashSet,
 	hash::Hash,
+	ops::{
+		Add,AddAssign
+	}
 };
-use ::core::{CompleteLattice, PowerSet, PowerSetItem};
+use ::core::{
+	CompleteLattice, PowerSet, PowerSetItem
+};
 
 trait_alias!(HashPowerSetItem: PowerSetItem, Hash);
 
@@ -35,30 +40,6 @@ impl<E> PowerSet for HashPowerSet<E>
 	
 	fn all(&self) -> Self::All{
 		self.set.clone()
-	}
-}
-
-impl<E> CompleteLattice for HashPowerSet<E>
-	where
-		E: HashPowerSetItem
-{
-	fn bottom() -> Self
-	{
-		Self{set: HashSet::new()}
-	}
-	
-	fn is_bottom(&self) -> bool
-	{
-		self.set.is_empty()
-	}
-	
-	fn join(&mut self, other: &Self)
-	{
-		for e in other.set.iter(){
-			if !self.set.contains(e) {
-				self.set.insert(e.clone());
-			}
-		}
 	}
 }
 
@@ -95,6 +76,67 @@ impl<E> PartialEq for HashPowerSet<E>
 		iter_subset::<E>(&self.set, &other.set)
 			&&
 			iter_subset(&other.set, &self.set)
+	}
+}
+
+impl<'a,E> Add<&'a Self> for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	type Output = Self;
+	
+	fn add(mut self, other: &'a Self) -> Self::Output
+	{
+		join(&mut self, other);
+		self
+	}
+}
+
+impl<E> Add<Self> for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	type Output = Self;
+	
+	fn add(mut self, other: Self) -> Self::Output
+	{
+		join(&mut self, &other);
+		self
+	}
+}
+
+impl<E> AddAssign for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	fn add_assign(&mut self, rhs: Self)
+	{
+		join(self, &rhs);
+	}
+}
+
+impl<'a,E> AddAssign<&'a Self> for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	fn add_assign(&mut self, rhs: &'a Self)
+	{
+		join(self, rhs);
+	}
+}
+
+impl<E> CompleteLattice for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	fn bottom() -> Self
+	{
+		Self{set: HashSet::new()}
+	}
+	
+	fn is_bottom(&self) -> bool
+	{
+		self.set.is_empty()
 	}
 }
 
@@ -135,7 +177,18 @@ pub fn iter_subset<E>(subset: &HashSet<E>, superset: &HashSet<E>) -> bool
 	true
 }
 
+// Helper functions
 
+fn join<E>(left: &mut  HashPowerSet<E>, right:&HashPowerSet<E>)
+	where
+		E: HashPowerSetItem
+{
+	for e in right.set.iter(){
+		if !left.set.contains(e) {
+			left.set.insert(e.clone());
+		}
+	}
+}
 
 
 

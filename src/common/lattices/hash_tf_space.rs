@@ -1,12 +1,17 @@
 
-use std::collections::{HashMap,HashSet};
-use std::hash::Hash;
-use std::ops::{Index, IndexMut};
-use std::cmp::Ordering;
-use std::collections::hash_set::IntoIter;
-use std::marker::PhantomData;
-
-use ::core::{CompleteLattice, TFSpace, TFSpaceKey, TFSpaceElement, Element};
+use std::{
+	collections::{
+		HashMap,HashSet,
+		hash_set::IntoIter
+	},
+	hash::Hash,
+	ops::{
+		Index, IndexMut, Add, AddAssign
+	},
+	cmp::Ordering,
+	marker::PhantomData,
+};
+use ::core::{CompleteLattice, TFSpace, TFSpaceKey, TFSpaceElement};
 
 trait_alias!(HashTFSpaceKey: TFSpaceKey, Hash);
 trait_alias!(HashTFSpaceElement: TFSpaceElement);
@@ -17,7 +22,7 @@ pub struct HashTFSpace<'a,K,E>
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
 {
-	map: HashMap<K,Element<E>>,
+	map: HashMap<K,E>,
 	a: PhantomData<&'a i8>
 }
 
@@ -48,22 +53,6 @@ impl<'a,K,E> CompleteLattice for HashTFSpace<'a,K,E>
 		self.map.values().all(|e| e.is_bottom())
 	}
 	
-	fn join(&mut self, other:&Self)
-	{
-		let self_keys = self.keys().collect::<Vec<_>>();
-		//Join all the common keys' values
-		let common_keys = self_keys.iter().filter(|key| other.map.contains_key(key));
-		for &k in common_keys {
-			let new_val =  self[k].clone() + other[k].clone();
-			self.map.insert(k, new_val);
-		}
-		
-		//Add all the values of the keys in other which are not in self
-		let other_keys = other.keys().filter(|key| !self_keys.contains(key));
-		for k in other_keys{
-			self.map.insert(k, other[k].clone());
-		}
-	}
 }
 
 impl<'a,K,E> PartialOrd for HashTFSpace<'a,K,E>
@@ -148,12 +137,62 @@ impl<'a,K,E> PartialEq for HashTFSpace<'a,K,E>
 	}
 }
 
+impl<'a,K,E> Add<Self> for HashTFSpace<'a,K,E>
+	where
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement
+{
+	type Output = Self;
+	
+	fn add(mut self, other: Self) -> Self::Output
+	{
+		join(&mut self, &other);
+		self
+	}
+}
+
+impl<'a,'b,K,E> Add<&'b Self> for HashTFSpace<'a,K,E>
+	where
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement
+{
+	type Output = Self;
+	
+	fn add(mut self, other: &'b Self) -> Self::Output
+	{
+		join(&mut self, other);
+		self
+	}
+}
+
+impl<'a,K,E> AddAssign for HashTFSpace<'a,K,E>
+	where
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement
+{
+	fn add_assign(&mut self, other: Self)
+	{
+		join(self, &other);
+	}
+}
+
+impl<'a,'b,K,E> AddAssign<&'b Self> for HashTFSpace<'a,K,E>
+	where
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement
+{
+	fn add_assign(&mut self, other: &'b Self)
+	{
+		join(self, other);
+	}
+}
+
 impl<'a,K,E> Index<K> for HashTFSpace<'a,K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
 {
-	type Output = Element<E>;
+	type Output = E;
 	
 	fn index(&self, index: K) -> &Self::Output
 	{
@@ -169,7 +208,7 @@ impl<'a,K,E> IndexMut<K> for HashTFSpace<'a,K,E>
 	fn index_mut(&mut self, index: K) -> &mut Self::Output
 	{
 		if !self.map.contains_key(&index){
-			self.map.insert(index, Element::bottom());
+			self.map.insert(index, E::bottom());
 		}
 		
 		self.map.get_mut(&index).unwrap()
@@ -177,6 +216,26 @@ impl<'a,K,E> IndexMut<K> for HashTFSpace<'a,K,E>
 }
 
 // Helper functions
+
+fn join<'a,K,E>(left: &mut  HashTFSpace<'a,K,E>, right:&HashTFSpace<'a,K,E>)
+	where
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement
+{
+	let self_keys = left.keys().collect::<Vec<_>>();
+	//Join all the common keys' values
+	let common_keys = self_keys.iter().filter(|key| right.map.contains_key(key));
+	for &k in common_keys {
+		let new_val =  left[k].clone() + right[k].clone();
+		left.map.insert(k, new_val);
+	}
+	
+	//Add all the values of the keys in other which are not in self
+	let other_keys = right.keys().filter(|key| !self_keys.contains(key));
+	for k in other_keys{
+		left.map.insert(k, right[k].clone());
+	}
+}
 
 ///
 /// Ensures that both arguments have the same keys, and that `f` holds for all
@@ -195,11 +254,11 @@ fn for_each_pair<'a,K,E,F,D1,D2>(l: &HashTFSpace<'a,K,E>, r: &HashTFSpace<'a,K,E
 	// Check that all the elements in left accept f() for their right counterparts
 	for s_key in l.keys() {
 		if let Some(o) = r.map.get(&s_key){
-			if !f(&l[s_key].inner, &o.inner) {
+			if !f(&l[s_key], &o) {
 				return false;
 			}
 		}else{
-			if !d1(&l[s_key].inner) {
+			if !d1(&l[s_key]) {
 				return false;
 			}
 		}
@@ -207,11 +266,11 @@ fn for_each_pair<'a,K,E,F,D1,D2>(l: &HashTFSpace<'a,K,E>, r: &HashTFSpace<'a,K,E
 	// Check that all the elements in right accept f() for their left counterparts
 	for o_key in r.keys() {
 		if let Some(s) = l.map.get(&o_key){
-			if !f(&s.inner, &r[o_key].inner) {
+			if !f(&s, &r[o_key]) {
 				return false;
 			}
 		}else {
-			if !d2(&r[o_key].inner) {
+			if !d2(&r[o_key]) {
 				return false;
 			}
 		}

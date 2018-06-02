@@ -1,6 +1,6 @@
 
 use core::{
-	CompleteLattice, Element, SubLattice, Worklist
+	CompleteLattice, SubLattice, Worklist
 };
 use graphene::{
 	core::{
@@ -25,11 +25,11 @@ pub trait Analysis<G,L>
 	
 	const FORWARD: bool;
 	
-	fn transfer(dependency: &Element<L>, target: &Element<L>, action: &Self::Action)
-		-> Element<Self::Lattice>
+	fn transfer(dependency: &L, target: &L, action: &Self::Action)
+		-> Self::Lattice
 	;
 	
-	fn analyze<W>(g: &G, initial_values: &mut HashMap<u32,Element<L>>)
+	fn analyze<W>(g: &G, initial_values: &mut HashMap<u32,L>)
 		where
 			W: Worklist
 	{
@@ -38,18 +38,18 @@ pub trait Analysis<G,L>
 		// Initialize all states
 		for i in g.all_vertices(){
 			if !initial_values.contains_key(&i) {
-				initial_values.insert(i, Element::bottom());
+				initial_values.insert(i, L::bottom());
 			}
 		}
 		
 		while let Some(fv) = worklist.next(){
-			let new_value = evaluate_flow_variable::<_,Self,_>(g, fv, initial_values);
-			if new_value.inner != *initial_values[&fv].inner.sub_lattice_ref() {
+			let new_value = evaluate_flow_variable::<_,Self,_,_>(g, fv, initial_values);
+			if new_value != *initial_values[&fv].sub_lattice_ref() {
 				for (v,d) in fv_dependentants::<_,Self,_>(g, fv){
 					worklist.insert(v,d);
 				}
 				if let Some(t) = initial_values.get_mut(&fv) {
-					*t.inner.sub_lattice_ref_mut() = new_value.inner;
+					*t.sub_lattice_ref_mut() = new_value;
 				}else {
 					unreachable!("All flow variables should have been initialized above")
 				}
@@ -95,13 +95,14 @@ fn fv_dependencies<G>(g: &G, fv: u32, forward: bool) -> Vec<((u32, bool), G::Edg
 	}
 }
 
-fn evaluate_flow_variable<G,N,L>(g: &G, fv: u32, values: &HashMap<u32,Element<L>>)
-							   -> Element<N::Lattice>
+fn evaluate_flow_variable<G,N,Nl,L>(g: &G, fv: u32, values: &HashMap<u32,L>)
+							   -> N::Lattice
 	where
 		G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		N: Analysis<G,L>,
+		N: Analysis<G,L,Lattice=Nl>,
+		Nl: CompleteLattice, // Used to circumvent this problem: https://stackoverflow.com/questions/50660911
 		L: CompleteLattice + SubLattice<N::Lattice>
 
 {
@@ -117,6 +118,6 @@ fn evaluate_flow_variable<G,N,L>(g: &G, fv: u32, values: &HashMap<u32,Element<L>
 		// flow variable has no dependencies
 		// Therefore, just return whatever values the map
 		// gives it
-		Element::new(values[&fv].inner.sub_lattice_ref().clone())
+		values[&fv].sub_lattice_ref().clone()
 	}
 }

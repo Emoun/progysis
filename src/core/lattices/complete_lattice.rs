@@ -1,4 +1,6 @@
-
+use std::ops::{
+	Add, AddAssign
+};
 ///
 /// A [Complete Lattice].
 ///
@@ -19,7 +21,10 @@
 /// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 /// [`Add`]: https://doc.rust-lang.org/std/ops/trait.Add.html
 ///
-pub trait CompleteLattice: PartialOrd + Clone
+pub trait CompleteLattice
+	where
+		for<'a> Self:	PartialOrd + Clone + AddAssign<Self> + AddAssign<&'a Self>
+				+ Add<&'a Self,Output=Self> + Add<Self,Output=Self> ,
 {
 	///
 	/// Returns the bottom (Greatest Lower Bound) element of the
@@ -33,36 +38,6 @@ pub trait CompleteLattice: PartialOrd + Clone
 	///
 	fn is_bottom(&self) -> bool;
 	
-	fn join(&mut self, other:&Self);
-	
-	///
-	/// Used by &Element::Add
-	///
-	fn join_new(&self, other: &Self) -> Self
-	{
-		let mut result = Self::bottom();
-		result.join(self);
-		result.join(other);
-		result
-	}
-	
-	///
-	/// Used by Element::AddAssign
-	///
-	fn add_assign(&mut self, other:Self)
-	{
-		self.join(&other);
-	}
-	
-	///
-	/// Used by Element::Add
-	///
-	fn add(mut self, other:Self) -> Self
-	{
-		self.join(&other);
-		self
-	}
-	
 	///
 	/// Whether this instance is comparable to the given.
 	///
@@ -73,4 +48,3 @@ pub trait CompleteLattice: PartialOrd + Clone
 		self.le(&other) || self.gt(&other)
 	}
 }
-
