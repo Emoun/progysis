@@ -1,5 +1,7 @@
 
-use core::CompleteLattice;
+use core::{
+	CompleteLattice
+};
 use std::ops::{Add, AddAssign};
 use std::cmp::Ordering;
 
@@ -135,3 +137,6 @@ impl<T> CompleteLattice for Element<T>
 		self.inner.join(&other.inner)
 	}
 }
+
+	
+

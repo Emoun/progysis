@@ -1,14 +1,122 @@
 
 use core::{
-	CompleteLattice, Element, Direction
+	CompleteLattice, Element, SubLattice, Worklist
 };
+use graphene::{
+	core::{
+		BaseGraph, EdgeWeightedGraph, Edge,
+		trait_aliases::{
+			IntoFromIter
+		}
+	}
+};
+use std::collections::HashMap;
 
-pub trait Analysis
+pub trait Analysis<G,L>
+	where
+		Self: Sized,
+		G: EdgeWeightedGraph<EdgeWeight=Self::Action> + BaseGraph<Vertex=u32>,
+		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		L: CompleteLattice + SubLattice<Self::Lattice>
 {
 	type Lattice: CompleteLattice;
 	type Action;
 	
-	const DIRECTION: Direction;
+	const FORWARD: bool;
 	
-	fn transfer(&Element<Self::Lattice>, &Self::Action) -> Element<Self::Lattice>;
+	fn transfer(dependency: &Element<L>, target: &Element<L>, action: &Self::Action)
+		-> Element<Self::Lattice>
+	;
+	
+	fn analyze<W>(g: &G, initial_values: &mut HashMap<u32,Element<L>>)
+		where
+			W: Worklist
+	{
+		let mut worklist = W::initialize::<_,Self,_>(g);
+		
+		// Initialize all states
+		for i in g.all_vertices(){
+			if !initial_values.contains_key(&i) {
+				initial_values.insert(i, Element::bottom());
+			}
+		}
+		
+		while let Some(fv) = worklist.next(){
+			let new_value = evaluate_flow_variable::<_,Self,_>(g, fv, initial_values);
+			if new_value.inner != *initial_values[&fv].inner.sub_lattice_ref() {
+				for (v,d) in fv_dependentants::<_,Self,_>(g, fv){
+					worklist.insert(v,d);
+				}
+				if let Some(t) = initial_values.get_mut(&fv) {
+					*t.inner.sub_lattice_ref_mut() = new_value.inner;
+				}else {
+					unreachable!("All flow variables should have been initialized above")
+				}
+			}
+		}
+	}
+}
+
+// Helper functions
+
+/// The flow variables that depend on the given flow variable.
+fn fv_dependentants<G,N,L>(g: &G, fv: u32) -> Vec<(u32, bool)>
+	where
+		G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
+		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		N: Analysis<G,L>,
+		L: CompleteLattice + SubLattice<N::Lattice>
+{
+	let result = if N::FORWARD {
+		fv_dependencies(g, fv, false)
+	}else{
+		fv_dependencies(g, fv, true)
+	};
+	result.into_iter().map(|(dependant,_)| dependant).collect()
+}
+
+/// The flow variables the given flow variable is dependent on.
+fn fv_dependencies<G>(g: &G, fv: u32, forward: bool) -> Vec<((u32, bool), G::EdgeId)>
+	where
+		G: EdgeWeightedGraph + BaseGraph<Vertex=u32>,
+		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+{
+	
+	if forward {
+		g.edges_sinked_in(fv).into_iter().map(
+			|e| ((*e.source(),true),*e.id())).collect()
+	}else{
+		g.edges_sourced_in(fv).into_iter().map(
+			|e| ((*e.sink(),false),*e.id())
+		).collect()
+	}
+}
+
+fn evaluate_flow_variable<G,N,L>(g: &G, fv: u32, values: &HashMap<u32,Element<L>>)
+							   -> Element<N::Lattice>
+	where
+		G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
+		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
+		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		N: Analysis<G,L>,
+		L: CompleteLattice + SubLattice<N::Lattice>
+
+{
+	let dependencies = fv_dependencies(g, fv, N::FORWARD);
+	let mut dependencies_iter = dependencies.iter();
+	if let Some(first_edge) = dependencies_iter.next(){
+		let mut result = N::transfer(&values[&(first_edge.0).0], &values[&fv], g.weight_ref(first_edge.1).unwrap());
+		while let Some(e) = dependencies_iter.next() {
+			result += N::transfer(&values[&(e.0).0], &values[&fv], g.weight_ref(e.1).unwrap());
+		}
+		result
+	}else{
+		// flow variable has no dependencies
+		// Therefore, just return whatever values the map
+		// gives it
+		Element::new(values[&fv].inner.sub_lattice_ref().clone())
+	}
 }

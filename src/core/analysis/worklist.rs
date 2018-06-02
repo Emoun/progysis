@@ -1,9 +1,9 @@
 
 use core::{
-	ConstraintSystem, Analysis, Direction
+	Analysis, CompleteLattice, SubLattice
 };
 use graphene::core::{
-	BaseGraph,
+	BaseGraph, EdgeWeightedGraph,
 	trait_aliases::{
 		IntoFromIter
 	}
@@ -12,13 +12,14 @@ use graphene::core::{
 
 pub trait Worklist: Iterator<Item=u32>
 {
-	fn insert(&mut self, v: u32, d: Direction);
+	fn insert(&mut self, v: u32, forward: bool);
 	
-	fn initialize<G,N>(cs: &G) -> Self
+	fn initialize<G,N,L>(program: &G) -> Self
 		where
-			G: ConstraintSystem,
+			G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
 			<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 			<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-			N: Analysis,
+			N: Analysis<G,L>,
+			L: CompleteLattice + SubLattice<N::Lattice>
 	;
 }
