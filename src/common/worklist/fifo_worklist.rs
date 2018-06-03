@@ -17,7 +17,7 @@ pub struct FifoWorklist
 
 impl Worklist for FifoWorklist
 {
-	fn insert(&mut self, v: u32, _: bool)
+	fn insert(&mut self, v: u32)
 	{
 		self.list.push(v);
 	}
@@ -32,7 +32,7 @@ impl Worklist for FifoWorklist
 	{
 		let mut new = FifoWorklist{list: Vec::new()};
 		for v in g.all_vertices().into_iter(){
-			new.insert(v,N::FORWARD);
+			new.insert(v);
 		}
 		new
 	}

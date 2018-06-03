@@ -12,7 +12,7 @@ use graphene::core::{
 
 pub trait Worklist: Iterator<Item=u32>
 {
-	fn insert(&mut self, v: u32, forward: bool);
+	fn insert(&mut self, v: u32);
 	
 	fn initialize<G,N,L>(program: &G) -> Self
 		where

@@ -45,8 +45,8 @@ pub trait Analysis<G,L>
 		while let Some(fv) = worklist.next(){
 			let new_value = evaluate_flow_variable::<_,Self,_,_>(g, fv, initial_values);
 			if new_value != *initial_values[&fv].sub_lattice_ref() {
-				for (v,d) in fv_dependentants::<_,Self,_>(g, fv){
-					worklist.insert(v,d);
+				for v in fv_dependentants::<_,Self,_>(g, fv){
+					worklist.insert(v);
 				}
 				if let Some(t) = initial_values.get_mut(&fv) {
 					*t.sub_lattice_ref_mut() = new_value;
@@ -61,7 +61,7 @@ pub trait Analysis<G,L>
 // Helper functions
 
 /// The flow variables that depend on the given flow variable.
-fn fv_dependentants<G,N,L>(g: &G, fv: u32) -> Vec<(u32, bool)>
+fn fv_dependentants<G,N,L>(g: &G, fv: u32) -> Vec<u32>
 	where
 		G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
@@ -78,7 +78,7 @@ fn fv_dependentants<G,N,L>(g: &G, fv: u32) -> Vec<(u32, bool)>
 }
 
 /// The flow variables the given flow variable is dependent on.
-fn fv_dependencies<G>(g: &G, fv: u32, forward: bool) -> Vec<((u32, bool), G::EdgeId)>
+fn fv_dependencies<G>(g: &G, fv: u32, forward: bool) -> Vec<(u32, G::EdgeId)>
 	where
 		G: EdgeWeightedGraph + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
@@ -87,10 +87,10 @@ fn fv_dependencies<G>(g: &G, fv: u32, forward: bool) -> Vec<((u32, bool), G::Edg
 	
 	if forward {
 		g.edges_sinked_in(fv).into_iter().map(
-			|e| ((*e.source(),true),*e.id())).collect()
+			|e| (*e.source(),*e.id())).collect()
 	}else{
 		g.edges_sourced_in(fv).into_iter().map(
-			|e| ((*e.sink(),false),*e.id())
+			|e| (*e.sink(),*e.id())
 		).collect()
 	}
 }
@@ -109,9 +109,9 @@ fn evaluate_flow_variable<G,N,Nl,L>(g: &G, fv: u32, values: &HashMap<u32,L>)
 	let dependencies = fv_dependencies(g, fv, N::FORWARD);
 	let mut dependencies_iter = dependencies.iter();
 	if let Some(first_edge) = dependencies_iter.next(){
-		let mut result = N::transfer(&values[&(first_edge.0).0], &values[&fv], g.weight_ref(first_edge.1).unwrap());
+		let mut result = N::transfer(&values[&(first_edge.0)], &values[&fv], g.weight_ref(first_edge.1).unwrap());
 		while let Some(e) = dependencies_iter.next() {
-			result += N::transfer(&values[&(e.0).0], &values[&fv], g.weight_ref(e.1).unwrap());
+			result += N::transfer(&values[&(e.0)], &values[&fv], g.weight_ref(e.1).unwrap());
 		}
 		result
 	}else{
