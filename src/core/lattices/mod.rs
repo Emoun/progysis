@@ -16,4 +16,5 @@ pub use self::{
 	power_set::*,
 	tf_space::*,
 	sub_lattice::*,
+	complete_lattice_for_std_types::*,
 };

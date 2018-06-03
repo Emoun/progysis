@@ -7,7 +7,7 @@ use ::common::{
 use progysis::{
 	common::worklist::FifoWorklist,
 	core::{
-		CompleteLattice, Analysis, SubLattice, PowerSet, TFSpace
+		CompleteLattice, Analysis, SubLattice, PowerSet, TFSpace, U32, U64
 	}
 };
 use graphene::{
@@ -30,24 +30,23 @@ impl<G,L> Analysis<G,L> for U32Analysis
 		G: EdgeWeightedGraph<EdgeWeight=u32> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice + SubLattice<u32>
+		L: CompleteLattice + SubLattice<U32>
 {
-	type Lattice = u32;
+	type Lattice = U32;
 	type Action = u32;
 	const FORWARD: bool = true;
 	
-	fn transfer(e: &L, _: &L, action: &u32) -> u32
+	fn transfer(e: &L, _: &L, action: &Self::Action) -> Self::Lattice
 	{
-		e.sub_lattice_ref() + action
+		U32(e.sub_lattice_ref().0 + action)
 	}
-	
 }
 
 #[test]
 fn solve_test()
 {
 	let mut map = HashMap::new();
-	map.insert(0, 1);
+	map.insert(0, U32(1));
 	
 	let mut program = AdjListGraph::empty_graph();
 	program.add_vertex(0).unwrap();
@@ -59,9 +58,9 @@ fn solve_test()
 	
 	U32Analysis::analyze::<FifoWorklist>(&program, &mut map);
 	
-	assert_eq!(1, map[&0]);
-	assert_eq!(2, map[&1]);
-	assert_eq!(4, map[&2]);
+	assert_eq!(U32(1), map[&0]);
+	assert_eq!(U32(2), map[&1]);
+	assert_eq!(U32(4), map[&2]);
 }
 
 enum Action{
@@ -173,13 +172,13 @@ fn solve_tf_space()
 }
 
 #[derive(Copy, Clone,PartialOrd, PartialEq,Debug)]
-struct D32(u64, u32);
+struct D32(U64, U32);
 
 impl CompleteLattice for D32
 {
 	fn bottom() -> Self
 	{
-		D32(u64::bottom(), u32::bottom())
+		D32(U64::bottom(), U32::bottom())
 	}
 	
 	///
@@ -236,37 +235,37 @@ impl<'a> AddAssign<&'a Self> for D32
 	}
 }
 
-impl SubLattice<u32> for D32
+impl SubLattice<U32> for D32
 {
-	fn sub_lattice(self) -> u32
+	fn sub_lattice(self) -> U32
 	{
 		self.1
 	}
 	
-	fn sub_lattice_ref(&self) -> &u32
+	fn sub_lattice_ref(&self) -> &U32
 	{
 		&self.1
 	}
 	
-	fn sub_lattice_ref_mut(&mut self) -> &mut u32
+	fn sub_lattice_ref_mut(&mut self) -> &mut U32
 	{
 		&mut self.1
 	}
 }
 
-impl SubLattice<u64> for D32
+impl SubLattice<U64> for D32
 {
-	fn sub_lattice(self) -> u64
+	fn sub_lattice(self) -> U64
 	{
 		self.0
 	}
 	
-	fn sub_lattice_ref(&self) -> &u64
+	fn sub_lattice_ref(&self) -> &U64
 	{
 		&self.0
 	}
 	
-	fn sub_lattice_ref_mut(&mut self) -> &mut u64
+	fn sub_lattice_ref_mut(&mut self) -> &mut U64
 	{
 		&mut self.0
 	}
@@ -279,9 +278,9 @@ impl<G,L> Analysis<G,L> for U64Analysis
 		G: EdgeWeightedGraph<EdgeWeight=u32> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice + SubLattice<u64> + SubLattice<u32>,
+		L: CompleteLattice + SubLattice<U64> + SubLattice<U32>,
 {
-	type Lattice = u64;
+	type Lattice = U64;
 	type Action = u32;
 	
 	const FORWARD: bool = true;
@@ -289,10 +288,10 @@ impl<G,L> Analysis<G,L> for U64Analysis
 	fn transfer(dependency: &L, target: &L, a: &Self::Action)
 		-> Self::Lattice
 	{
-		let dep: &u64 = dependency.sub_lattice_ref();
-		let tar: &u32 = target.sub_lattice_ref();
+		let dep: &U64 = dependency.sub_lattice_ref();
+		let tar: &U32 = target.sub_lattice_ref();
 		
-		*dep + *tar as u64 + *a as u64
+		U64(dep.0 + tar.0 as u64 + *a as u64)
 	}
 }
 
@@ -300,7 +299,7 @@ impl<G,L> Analysis<G,L> for U64Analysis
 fn solve_test_dependent()
 {
 	let mut map = HashMap::new();
-	map.insert(0, D32(0,1));
+	map.insert(0, D32(U64(0),U32(1)));
 	
 	let mut program = AdjListGraph::empty_graph();
 	program.add_vertex(0).unwrap();
@@ -313,8 +312,8 @@ fn solve_test_dependent()
 	U32Analysis::analyze::<FifoWorklist>(&program, &mut map);
 	U64Analysis::analyze::<FifoWorklist>(&program, &mut map);
 	
-	assert_eq!(D32(0,1), map[&0]);
-	assert_eq!(D32(3,2), map[&1]);
-	assert_eq!(D32(9,4), map[&2]);
+	assert_eq!(D32(U64(0),U32(1)), map[&0]);
+	assert_eq!(D32(U64(3),U32(2)), map[&1]);
+	assert_eq!(D32(U64(9),U32(4)), map[&2]);
 	
 }
