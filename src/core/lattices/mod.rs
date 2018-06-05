@@ -10,6 +10,7 @@ mod power_set;
 mod tf_space;
 mod complete_lattice_for_std_types;
 mod sub_lattice;
+mod bottom;
 
 pub use self::{
 	complete_lattice::*,
@@ -17,4 +18,5 @@ pub use self::{
 	tf_space::*,
 	sub_lattice::*,
 	complete_lattice_for_std_types::*,
+	bottom::*,
 };

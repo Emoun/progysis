@@ -11,7 +11,9 @@ use std::{
 	cmp::Ordering,
 	marker::PhantomData,
 };
-use ::core::{CompleteLattice, TFSpace, TFSpaceKey, TFSpaceElement};
+use core::{
+	CompleteLattice, Bottom, TFSpace, TFSpaceKey, TFSpaceElement
+};
 
 trait_alias!(HashTFSpaceKey: TFSpaceKey, Hash);
 trait_alias!(HashTFSpaceElement: TFSpaceElement);
@@ -43,16 +45,22 @@ impl<'a,K,E> CompleteLattice for HashTFSpace<'a,K,E>
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
 {
-	fn bottom() -> Self
-	{
-		Self{map: HashMap::new(), a:PhantomData}
-	}
-	
 	fn is_bottom(&self) -> bool
 	{
 		self.map.values().all(|e| e.is_bottom())
 	}
 	
+}
+
+impl<'a,K,E> Bottom for HashTFSpace<'a,K,E>
+	where
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement
+{
+	fn bottom() -> Self
+	{
+		Self{map: HashMap::new(), a:PhantomData}
+	}
 }
 
 impl<'a,K,E> PartialOrd for HashTFSpace<'a,K,E>

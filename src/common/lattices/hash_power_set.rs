@@ -10,8 +10,8 @@ use std::{
 		Add,AddAssign
 	}
 };
-use ::core::{
-	CompleteLattice, PowerSet, PowerSetItem
+use core::{
+	CompleteLattice, PowerSet, PowerSetItem, Bottom
 };
 
 trait_alias!(HashPowerSetItem: PowerSetItem, Hash);
@@ -129,14 +129,19 @@ impl<E> CompleteLattice for HashPowerSet<E>
 	where
 		E: HashPowerSetItem
 {
-	fn bottom() -> Self
-	{
-		Self{set: HashSet::new()}
-	}
-	
 	fn is_bottom(&self) -> bool
 	{
 		self.set.is_empty()
+	}
+}
+
+impl<E> Bottom for HashPowerSet<E>
+	where
+		E: HashPowerSetItem
+{
+	fn bottom() -> Self
+	{
+		Self{set: HashSet::new()}
 	}
 }
 

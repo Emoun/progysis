@@ -1,6 +1,8 @@
 use std::ops::{
 	Add, AddAssign
 };
+use core::Bottom;
+
 ///
 /// A [Complete Lattice].
 ///
@@ -21,17 +23,10 @@ use std::ops::{
 /// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 /// [`Add`]: https://doc.rust-lang.org/std/ops/trait.Add.html
 ///
-pub trait CompleteLattice
+pub trait CompleteLattice: Clone + Bottom + PartialOrd + AddAssign + Add<Output=Self>
 	where
-		for<'a> Self:	PartialOrd + Clone + AddAssign<Self> + AddAssign<&'a Self>
-				+ Add<&'a Self,Output=Self> + Add<Self,Output=Self> ,
+		for<'a> Self: AddAssign<&'a Self> + Add<&'a Self,Output=Self>,
 {
-	///
-	/// Returns the bottom (Greatest Lower Bound) element of the
-	/// [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
-	///
-	fn bottom() -> Self;
-	
 	///
 	/// Whether this instance is the bottom element of the
 	/// [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).

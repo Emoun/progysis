@@ -1,7 +1,9 @@
 
-use ::core::{CompleteLattice};
+use ::core::{CompleteLattice, Bottom};
 use std::{
-	ops::{Add, AddAssign},
+	ops::{
+		Add, AddAssign
+	},
 	cmp::{
 		max, Ordering
 	}
@@ -12,18 +14,18 @@ pub struct U64(pub u64);
 
 impl CompleteLattice for U64
 {
-	fn bottom() -> Self
-	{
-		U64(0)
-	}
 	
-	///
-	/// Whether this instance is the bottom element of the
-	/// [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
-	///
 	fn is_bottom(&self) -> bool
 	{
 		self.0 == 0
+	}
+}
+
+impl Bottom for U64
+{
+	fn bottom() -> Self
+	{
+		U64(0)
 	}
 }
 

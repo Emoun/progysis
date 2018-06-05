@@ -1,7 +1,11 @@
 
-use ::core::{CompleteLattice};
+use ::core::{
+	CompleteLattice, Bottom
+};
 use std::{
-	ops::{Add, AddAssign},
+	ops::{
+		Add, AddAssign
+	},
 	cmp::{
 		max, Ordering
 	}
@@ -12,14 +16,17 @@ pub struct U32(pub u32);
 
 impl CompleteLattice for U32
 {
-	fn bottom() -> Self
-	{
-		U32(0)
-	}
-	
 	fn is_bottom(&self) -> bool
 	{
 		self.0 == 0
+	}
+}
+
+impl Bottom for U32
+{
+	fn bottom() -> Self
+	{
+		U32(0)
 	}
 }
 

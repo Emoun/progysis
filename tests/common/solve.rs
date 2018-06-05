@@ -7,7 +7,7 @@ use ::common::{
 use progysis::{
 	common::worklist::FifoWorklist,
 	core::{
-		CompleteLattice, Analysis, SubLattice, PowerSet, TFSpace, U32, U64
+		CompleteLattice, Analysis, SubLattice, PowerSet, TFSpace, U32, U64, Bottom
 	}
 };
 use graphene::{
@@ -176,20 +176,20 @@ struct D32(U64, U32);
 
 impl CompleteLattice for D32
 {
-	fn bottom() -> Self
-	{
-		D32(U64::bottom(), U32::bottom())
-	}
-	
-	///
-	/// Whether this instance is the bottom element of the
-	/// [Complete Lattice](http://mathworld.wolfram.com/CompleteLattice.html).
-	///
 	fn is_bottom(&self) -> bool
 	{
 		self.0.is_bottom() && self.1.is_bottom()
 	}
 }
+
+impl Bottom for D32
+{
+	fn bottom() -> Self
+	{
+		D32(U64::bottom(), U32::bottom())
+	}
+}
+
 
 fn join(left: &mut D32, right:&D32)
 {
