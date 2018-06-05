@@ -1,6 +1,6 @@
 
 use core::{
-	CompleteLattice, SubLattice, Worklist
+	CompleteLattice, SubLattice, Worklist, Bottom
 };
 use graphene::{
 	core::{
@@ -18,7 +18,7 @@ pub trait Analysis<G,L>
 		G: EdgeWeightedGraph<EdgeWeight=Self::Action> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice + SubLattice<Self::Lattice>
+		L: Bottom + SubLattice<Self::Lattice>
 {
 	type Lattice: CompleteLattice;
 	type Action;
@@ -67,7 +67,7 @@ fn fv_dependentants<G,N,L>(g: &G, fv: u32) -> Vec<u32>
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 		N: Analysis<G,L>,
-		L: CompleteLattice + SubLattice<N::Lattice>
+		L: Bottom + SubLattice<N::Lattice>
 {
 	let result = if N::FORWARD {
 		fv_dependencies(g, fv, false)
@@ -103,7 +103,7 @@ fn evaluate_flow_variable<G,N,Nl,L>(g: &G, fv: u32, values: &HashMap<u32,L>)
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 		N: Analysis<G,L,Lattice=Nl>,
 		Nl: CompleteLattice, // Used to circumvent this problem: https://stackoverflow.com/questions/50660911
-		L: CompleteLattice + SubLattice<N::Lattice>
+		L: Bottom + SubLattice<N::Lattice>
 
 {
 	let dependencies = fv_dependencies(g, fv, N::FORWARD);

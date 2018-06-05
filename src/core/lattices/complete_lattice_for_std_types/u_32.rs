@@ -7,7 +7,7 @@ use std::{
 		Add, AddAssign
 	},
 	cmp::{
-		max, Ordering
+		max
 	}
 };
 
@@ -60,6 +60,6 @@ impl<'a> AddAssign<&'a Self> for U32
 {
 	fn add_assign(&mut self, rhs:&'a Self)
 	{
-		*self += rhs;
+		*self = max(*self, *rhs);
 	}
 }

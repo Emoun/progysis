@@ -1,7 +1,7 @@
 
 use std::vec::Vec;
 use core::{
-	Worklist, Analysis, CompleteLattice, SubLattice
+	Worklist, Analysis, SubLattice, Bottom
 };
 use graphene::core::{
 	BaseGraph, EdgeWeightedGraph,
@@ -28,7 +28,7 @@ impl Worklist for FifoWorklist
 			<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 			<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 			N: Analysis<G,L>,
-			L: CompleteLattice + SubLattice<N::Lattice>
+			L: Bottom + SubLattice<N::Lattice>
 	{
 		let mut new = FifoWorklist{list: Vec::new()};
 		for v in g.all_vertices().into_iter(){

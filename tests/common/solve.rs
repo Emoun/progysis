@@ -30,7 +30,7 @@ impl<G,L> Analysis<G,L> for U32Analysis
 		G: EdgeWeightedGraph<EdgeWeight=u32> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice + SubLattice<U32>
+		L: Bottom + SubLattice<U32>
 {
 	type Lattice = U32;
 	type Action = u32;
@@ -83,7 +83,7 @@ impl<'a,G,L> Analysis<G,L> for SignAnalysis<'a>
 		G: EdgeWeightedGraph<EdgeWeight=Action> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice + SubLattice<StringSignTFSpace<'a>>
+		L: Bottom + SubLattice<StringSignTFSpace<'a>>
 {
 	type Lattice = StringSignTFSpace<'a>;
 	type Action = Action;
@@ -174,64 +174,11 @@ fn solve_tf_space()
 #[derive(Copy, Clone,PartialOrd, PartialEq,Debug)]
 struct D32(U64, U32);
 
-impl CompleteLattice for D32
-{
-	fn is_bottom(&self) -> bool
-	{
-		self.0.is_bottom() && self.1.is_bottom()
-	}
-}
-
 impl Bottom for D32
 {
 	fn bottom() -> Self
 	{
 		D32(U64::bottom(), U32::bottom())
-	}
-}
-
-
-fn join(left: &mut D32, right:&D32)
-{
-	left.0 += right.0;
-	left.1 += &right.1;
-}
-
-impl<'a> Add<&'a Self> for D32
-{
-	type Output = Self;
-	
-	fn add(mut self, other: &'a Self) -> Self::Output
-	{
-		join(&mut self, other);
-		self
-	}
-}
-
-impl Add<Self> for D32
-{
-	type Output = Self;
-	
-	fn add(mut self, other: Self) -> Self::Output
-	{
-		join(&mut self, &other);
-		self
-	}
-}
-
-impl AddAssign for D32
-{
-	fn add_assign(&mut self, rhs: Self)
-	{
-		join(self, &rhs);
-	}
-}
-
-impl<'a> AddAssign<&'a Self> for D32
-{
-	fn add_assign(&mut self, rhs: &'a Self)
-	{
-		join(self, rhs);
 	}
 }
 
@@ -278,7 +225,7 @@ impl<G,L> Analysis<G,L> for U64Analysis
 		G: EdgeWeightedGraph<EdgeWeight=u32> + BaseGraph<Vertex=u32>,
 		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
-		L: CompleteLattice + SubLattice<U64> + SubLattice<U32>,
+		L: Bottom + SubLattice<U64> + SubLattice<U32>,
 {
 	type Lattice = U64;
 	type Action = u32;

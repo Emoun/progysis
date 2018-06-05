@@ -1,6 +1,6 @@
 
 use core::{
-	Analysis, CompleteLattice, SubLattice
+	Analysis, SubLattice, Bottom
 };
 use graphene::core::{
 	BaseGraph, EdgeWeightedGraph,
@@ -20,6 +20,6 @@ pub trait Worklist: Iterator<Item=u32>
 			<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
 			<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 			N: Analysis<G,L>,
-			L: CompleteLattice + SubLattice<N::Lattice>
+			L: Bottom + SubLattice<N::Lattice>
 	;
 }
