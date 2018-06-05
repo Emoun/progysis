@@ -1,32 +1,35 @@
 
-use std::vec::Vec;
+use std::{
+	vec::Vec,
+	hash::Hash,
+};
 use core::{
 	Worklist, Analysis, SubLattice, Bottom
 };
 use graphene::core::{
-	BaseGraph, EdgeWeightedGraph,
-	trait_aliases::{
-		IntoFromIter
-	}
+	EdgeWeightedGraph,
 };
 
-pub struct FifoWorklist
+pub struct FifoWorklist<G>
+	where
+		G: EdgeWeightedGraph,
+		G::Vertex: Hash,
 {
-	list: Vec<u32>
+	list: Vec<G::Vertex>
 }
 
-impl Worklist for FifoWorklist
+impl<G> Worklist<G> for FifoWorklist<G>
+	where
+		G: EdgeWeightedGraph,
+		G::Vertex: Hash,
 {
-	fn insert(&mut self, v: u32)
+	fn insert(&mut self, v: G::Vertex)
 	{
 		self.list.push(v);
 	}
 	
-	fn initialize<G,N,L>(g: &G) -> Self
+	fn initialize<N,L>(g: &G) -> Self
 		where
-			G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
-			<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-			<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
 			N: Analysis<G,L>,
 			L: Bottom + SubLattice<N::Lattice>
 	{
@@ -38,9 +41,12 @@ impl Worklist for FifoWorklist
 	}
 }
 
-impl Iterator for FifoWorklist
+impl<G> Iterator for FifoWorklist<G>
+	where
+		G: EdgeWeightedGraph,
+		G::Vertex: Hash
 {
-	type Item = u32;
+	type Item = G::Vertex;
 	
 	fn next(&mut self) -> Option<Self::Item>
 	{

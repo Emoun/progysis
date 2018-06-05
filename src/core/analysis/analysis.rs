@@ -4,36 +4,36 @@ use core::{
 };
 use graphene::{
 	core::{
-		BaseGraph, EdgeWeightedGraph, Edge,
-		trait_aliases::{
-			IntoFromIter
-		}
+		EdgeWeightedGraph, Edge,
 	}
 };
-use std::collections::HashMap;
+use std::{
+	collections::{
+		HashMap
+	},
+	hash::Hash
+};
 
 pub trait Analysis<G,L>
 	where
 		Self: Sized,
-		G: EdgeWeightedGraph<EdgeWeight=Self::Action> + BaseGraph<Vertex=u32>,
-		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		G: EdgeWeightedGraph,
+		G::Vertex: Hash,
 		L: Bottom + SubLattice<Self::Lattice>
 {
 	type Lattice: CompleteLattice;
-	type Action;
 	
 	const FORWARD: bool;
 	
-	fn transfer(dependency: &L, target: &L, action: &Self::Action)
+	fn transfer(dependency: &L, target: &L, action: &G::EdgeWeight)
 		-> Self::Lattice
 	;
 	
-	fn analyze<W>(g: &G, initial_values: &mut HashMap<u32,L>)
+	fn analyze<W>(g: &G, initial_values: &mut HashMap<G::Vertex,L>)
 		where
-			W: Worklist
+			W: Worklist<G>
 	{
-		let mut worklist = W::initialize::<_,Self,_>(g);
+		let mut worklist = W::initialize::<Self,_>(g);
 		
 		// Initialize all states
 		for i in g.all_vertices(){
@@ -43,9 +43,9 @@ pub trait Analysis<G,L>
 		}
 		
 		while let Some(fv) = worklist.next(){
-			let new_value = evaluate_flow_variable::<_,Self,_,_>(g, fv, initial_values);
+			let new_value = evaluate_flow_variable::<Self,_,_,_>(g, fv, initial_values);
 			if new_value != *initial_values[&fv].sub_lattice_ref() {
-				for v in fv_dependentants::<_,Self,_>(g, fv){
+				for v in fv_dependentants::<Self,_,_>(g, fv){
 					worklist.insert(v);
 				}
 				if let Some(t) = initial_values.get_mut(&fv) {
@@ -61,11 +61,10 @@ pub trait Analysis<G,L>
 // Helper functions
 
 /// The flow variables that depend on the given flow variable.
-fn fv_dependentants<G,N,L>(g: &G, fv: u32) -> Vec<u32>
+fn fv_dependentants<N,L,G>(g: &G, fv: G::Vertex) -> Vec<G::Vertex>
 	where
-		G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
-		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		G: EdgeWeightedGraph,
+		G::Vertex: Hash,
 		N: Analysis<G,L>,
 		L: Bottom + SubLattice<N::Lattice>
 {
@@ -78,11 +77,10 @@ fn fv_dependentants<G,N,L>(g: &G, fv: u32) -> Vec<u32>
 }
 
 /// The flow variables the given flow variable is dependent on.
-fn fv_dependencies<G>(g: &G, fv: u32, forward: bool) -> Vec<(u32, G::EdgeId)>
+fn fv_dependencies<G>(g: &G, fv: G::Vertex, forward: bool) -> Vec<(G::Vertex, G::EdgeId)>
 	where
-		G: EdgeWeightedGraph + BaseGraph<Vertex=u32>,
-		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		G: EdgeWeightedGraph,
+		G::Vertex: Hash,
 {
 	
 	if forward {
@@ -95,12 +93,11 @@ fn fv_dependencies<G>(g: &G, fv: u32, forward: bool) -> Vec<(u32, G::EdgeId)>
 	}
 }
 
-fn evaluate_flow_variable<G,N,Nl,L>(g: &G, fv: u32, values: &HashMap<u32,L>)
+fn evaluate_flow_variable<N,Nl,L,G>(g: &G, fv: G::Vertex, values: &HashMap<G::Vertex,L>)
 							   -> N::Lattice
 	where
-		G: EdgeWeightedGraph<EdgeWeight=N::Action> + BaseGraph<Vertex=u32>,
-		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		G: EdgeWeightedGraph,
+		G::Vertex: Hash,
 		N: Analysis<G,L,Lattice=Nl>,
 		Nl: CompleteLattice, // Used to circumvent this problem: https://stackoverflow.com/questions/50660911
 		L: Bottom + SubLattice<N::Lattice>

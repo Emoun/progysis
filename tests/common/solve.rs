@@ -20,23 +20,22 @@ use graphene::{
 use std::{
 	collections::HashMap,
 	marker::PhantomData,
-	ops::{Add,AddAssign}
+	ops::{Add,AddAssign},
+	hash::Hash
 };
 
 pub struct U32Analysis {}
 
 impl<G,L> Analysis<G,L> for U32Analysis
 	where
-		G: EdgeWeightedGraph<EdgeWeight=u32> + BaseGraph<Vertex=u32>,
-		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		G: EdgeWeightedGraph<EdgeWeight=u32>,
+		G::Vertex: Hash,
 		L: Bottom + SubLattice<U32>
 {
 	type Lattice = U32;
-	type Action = u32;
 	const FORWARD: bool = true;
 	
-	fn transfer(e: &L, _: &L, action: &Self::Action) -> Self::Lattice
+	fn transfer(e: &L, _: &L, action: &G::EdgeWeight) -> Self::Lattice
 	{
 		U32(e.sub_lattice_ref().0 + action)
 	}
@@ -56,7 +55,7 @@ fn solve_test()
 	program.add_edge_weighted((0, 1), 1).unwrap();
 	program.add_edge_weighted((1, 2), 2).unwrap();
 	
-	U32Analysis::analyze::<FifoWorklist>(&program, &mut map);
+	U32Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
 	
 	assert_eq!(U32(1), map[&0]);
 	assert_eq!(U32(2), map[&1]);
@@ -80,13 +79,11 @@ struct SignAnalysis<'a>
 
 impl<'a,G,L> Analysis<G,L> for SignAnalysis<'a>
 	where
-		G: EdgeWeightedGraph<EdgeWeight=Action> + BaseGraph<Vertex=u32>,
-		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		G: EdgeWeightedGraph<EdgeWeight=Action>,
+		G::Vertex: Hash,
 		L: Bottom + SubLattice<StringSignTFSpace<'a>>
 {
 	type Lattice = StringSignTFSpace<'a>;
-	type Action = Action;
 	const FORWARD: bool = true;
 	
 	
@@ -154,7 +151,7 @@ fn solve_tf_space()
 	let mut initial: HashMap<u32,StringSignTFSpace> = HashMap::new();
 	initial.insert(0, StringSignTFSpace::bottom());
 	
-	SignAnalysis::analyze::<FifoWorklist>(&g, &mut initial);
+	SignAnalysis::analyze::<FifoWorklist<_>>(&g, &mut initial);
 	
 	let top = SignPowerSet::from_iter(vec![Plus,Minus,Zero]);
 	let plus_zero = SignPowerSet::from_iter(vec![Plus, Zero]);
@@ -222,17 +219,15 @@ struct U64Analysis{}
 
 impl<G,L> Analysis<G,L> for U64Analysis
 	where
-		G: EdgeWeightedGraph<EdgeWeight=u32> + BaseGraph<Vertex=u32>,
-		<G as BaseGraph>::VertexIter: IntoFromIter<u32>,
-		<G as BaseGraph>::EdgeIter: IntoFromIter<(u32,u32,<G as BaseGraph>::EdgeId)>,
+		G: EdgeWeightedGraph<EdgeWeight=u32>,
+		G::Vertex: Hash,
 		L: Bottom + SubLattice<U64> + SubLattice<U32>,
 {
 	type Lattice = U64;
-	type Action = u32;
 	
 	const FORWARD: bool = true;
 	
-	fn transfer(dependency: &L, target: &L, a: &Self::Action)
+	fn transfer(dependency: &L, target: &L, a: &G::EdgeWeight)
 		-> Self::Lattice
 	{
 		let dep: &U64 = dependency.sub_lattice_ref();
@@ -256,8 +251,8 @@ fn solve_test_dependent()
 	program.add_edge_weighted((0, 1), 1).unwrap();
 	program.add_edge_weighted((1, 2), 2).unwrap();
 	
-	U32Analysis::analyze::<FifoWorklist>(&program, &mut map);
-	U64Analysis::analyze::<FifoWorklist>(&program, &mut map);
+	U32Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
+	U64Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
 	
 	assert_eq!(D32(U64(0),U32(1)), map[&0]);
 	assert_eq!(D32(U64(3),U32(2)), map[&1]);
