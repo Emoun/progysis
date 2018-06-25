@@ -44,14 +44,14 @@ pub trait Analysis<G,L>
 		
 		while let Some(fv) = worklist.next(){
 			let new_value = evaluate_flow_variable::<Self,_,_,_>(g, fv, initial_values);
-			if new_value != *initial_values[&fv].sub_lattice_ref() {
-				for v in fv_dependentants::<Self,_,_>(g, fv){
-					worklist.insert(v);
-				}
+			if !(*initial_values[&fv].sub_lattice_ref() >= new_value)   {
 				if let Some(t) = initial_values.get_mut(&fv) {
-					*t.sub_lattice_ref_mut() = new_value;
+					*t.sub_lattice_ref_mut() += new_value;
 				}else {
 					unreachable!("All flow variables should have been initialized above")
+				}
+				for v in fv_dependentants::<Self,_,_>(g, fv){
+					worklist.insert(v);
 				}
 			}
 		}
