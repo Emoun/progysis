@@ -4,7 +4,7 @@ use core::{
 };
 use graphene::{
 	core::{
-		EdgeWeightedGraph, Edge,
+		Graph, Edge
 	}
 };
 use std::{
@@ -14,10 +14,10 @@ use std::{
 	hash::Hash
 };
 
-pub trait Analysis<G,L>
+pub trait Analysis<'a,G,L>
 	where
 		Self: Sized,
-		G: EdgeWeightedGraph,
+		G: Graph<'a>,
 		G::Vertex: Hash,
 		L: Bottom + SubLattice<Self::Lattice>
 {
@@ -29,9 +29,9 @@ pub trait Analysis<G,L>
 		-> Self::Lattice
 	;
 	
-	fn analyze<W>(g: &G, initial_values: &mut HashMap<G::Vertex,L>)
+	fn analyze<W>(g: &'a G, initial_values: &mut HashMap<G::Vertex,L>)
 		where
-			W: Worklist<G>
+			W: Worklist<'a,G>
 	{
 		let mut worklist = W::initialize::<Self,_>(g);
 		
@@ -51,7 +51,7 @@ pub trait Analysis<G,L>
 					unreachable!("All flow variables should have been initialized above")
 				}
 				for v in fv_dependentants::<Self,_,_>(g, fv){
-					worklist.insert(v);
+					worklist.insert(v.0);
 				}
 			}
 		}
@@ -61,11 +61,11 @@ pub trait Analysis<G,L>
 // Helper functions
 
 /// The flow variables that depend on the given flow variable.
-fn fv_dependentants<N,L,G>(g: &G, fv: G::Vertex) -> Vec<G::Vertex>
+fn fv_dependentants<'a,N,L,G>(g: &'a G, fv: G::Vertex) -> Vec<(G::Vertex, &'a G::EdgeWeight)>
 	where
-		G: EdgeWeightedGraph,
+		G: Graph<'a>,
 		G::Vertex: Hash,
-		N: Analysis<G,L>,
+		N: Analysis<'a,G,L>,
 		L: Bottom + SubLattice<N::Lattice>
 {
 	let result = if N::FORWARD {
@@ -73,32 +73,31 @@ fn fv_dependentants<N,L,G>(g: &G, fv: G::Vertex) -> Vec<G::Vertex>
 	}else{
 		fv_dependencies(g, fv, true)
 	};
-	result.into_iter().map(|(dependant,_)| dependant).collect()
+	result.into_iter().collect()
 }
 
 /// The flow variables the given flow variable is dependent on.
-fn fv_dependencies<G>(g: &G, fv: G::Vertex, forward: bool) -> Vec<(G::Vertex, G::EdgeId)>
+fn fv_dependencies<'a,G>(g: &'a G, fv: G::Vertex, forward: bool) -> Vec<(G::Vertex, &'a G::EdgeWeight)>
 	where
-		G: EdgeWeightedGraph,
+		G: Graph<'a>,
 		G::Vertex: Hash,
 {
 	
 	if forward {
 		g.edges_sinked_in(fv).into_iter().map(
-			|e| (*e.source(),*e.id())).collect()
+			|e| (e.source(), e.2)).collect()
 	}else{
 		g.edges_sourced_in(fv).into_iter().map(
-			|e| (*e.sink(),*e.id())
-		).collect()
+			|e| (e.sink(), e.2)).collect()
 	}
 }
 
-fn evaluate_flow_variable<N,Nl,L,G>(g: &G, fv: G::Vertex, values: &HashMap<G::Vertex,L>)
+fn evaluate_flow_variable<'a,N,Nl,L,G>(g: &'a G, fv: G::Vertex, values: &HashMap<G::Vertex,L>)
 							   -> N::Lattice
 	where
-		G: EdgeWeightedGraph,
+		G: Graph<'a>,
 		G::Vertex: Hash,
-		N: Analysis<G,L,Lattice=Nl>,
+		N: Analysis<'a,G,L,Lattice=Nl>,
 		Nl: CompleteLattice, // Used to circumvent this problem: https://stackoverflow.com/questions/50660911
 		L: Bottom + SubLattice<N::Lattice>
 
@@ -106,9 +105,9 @@ fn evaluate_flow_variable<N,Nl,L,G>(g: &G, fv: G::Vertex, values: &HashMap<G::Ve
 	let dependencies = fv_dependencies(g, fv, N::FORWARD);
 	let mut dependencies_iter = dependencies.iter();
 	if let Some(first_edge) = dependencies_iter.next(){
-		let mut result = N::transfer(&values[&(first_edge.0)], &values[&fv], g.weight_ref(first_edge.1).unwrap());
+		let mut result = N::transfer(&values[&(first_edge.0)], &values[&fv], first_edge.1);
 		while let Some(e) = dependencies_iter.next() {
-			result += N::transfer(&values[&(e.0)], &values[&fv], g.weight_ref(e.1).unwrap());
+			result += N::transfer(&values[&(e.0)], &values[&fv], e.1);
 		}
 		result
 	}else{

@@ -12,7 +12,7 @@ use progysis::{
 };
 use graphene::{
 	core::{
-		BaseGraph, EdgeWeightedGraph,
+		Graph, ManualGraph,
 		trait_aliases::IntoFromIter
 	},
 	common::AdjListGraph
@@ -26,10 +26,12 @@ use std::{
 
 pub struct U32Analysis {}
 
-impl<G,L> Analysis<G,L> for U32Analysis
+impl<'a,G,L> Analysis<'a,G,L> for U32Analysis
 	where
-		G: EdgeWeightedGraph<EdgeWeight=u32>,
+		G: Graph<'a,EdgeWeight=u32>,
 		G::Vertex: Hash,
+		G::EdgeIter: IntoFromIter<(G::Vertex,G::Vertex,&'a G::EdgeWeight)>,
+		G::EdgeMutIter: IntoFromIter<(G::Vertex,G::Vertex,&'a mut G::EdgeWeight)>,
 		L: Bottom + SubLattice<U32>
 {
 	type Lattice = U32;
@@ -47,13 +49,13 @@ fn solve_test()
 	let mut map = HashMap::new();
 	map.insert(0, U32(1));
 	
-	let mut program = AdjListGraph::empty_graph();
+	let mut program = AdjListGraph::<_,(),_>::new();
 	program.add_vertex(0).unwrap();
 	program.add_vertex(1).unwrap();
 	program.add_vertex(2).unwrap();
 	
-	program.add_edge_weighted((0, 1), 1).unwrap();
-	program.add_edge_weighted((1, 2), 2).unwrap();
+	program.add_edge_weighted((0,1,1)).unwrap();
+	program.add_edge_weighted((1,2,2)).unwrap();
 	
 	U32Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
 	
@@ -77,10 +79,12 @@ struct SignAnalysis<'a>
 	pha: PhantomData<&'a u8>
 }
 
-impl<'a,G,L> Analysis<G,L> for SignAnalysis<'a>
+impl<'a,G,L> Analysis<'a,G,L> for SignAnalysis<'a>
 	where
-		G: EdgeWeightedGraph<EdgeWeight=Action>,
+		G: Graph<'a,EdgeWeight=Action>,
 		G::Vertex: Hash,
+		G::EdgeIter: IntoFromIter<(G::Vertex,G::Vertex,&'a G::EdgeWeight)>,
+		G::EdgeMutIter: IntoFromIter<(G::Vertex,G::Vertex,&'a mut G::EdgeWeight)>,
 		L: Bottom + SubLattice<StringSignTFSpace<'a>>
 {
 	type Lattice = StringSignTFSpace<'a>;
@@ -135,18 +139,18 @@ impl<'a,G,L> Analysis<G,L> for SignAnalysis<'a>
 fn solve_tf_space()
 {
 	use self::Sign::*;
-	let mut g = AdjListGraph::<u32, Action>::empty_graph();
+	let mut g = AdjListGraph::<u32,(), Action>::new();
 	for i in 0..8{
 		g.add_vertex(i).unwrap();
 	}
-	g.add_edge_weighted((0,3),Action::DeclareX).unwrap();
-	g.add_edge_weighted((3,2),Action::DeclareY).unwrap();
-	g.add_edge_weighted((2,4),Action::YIsMinus1).unwrap();
-	g.add_edge_weighted((4,5),Action::XIs0).unwrap();
-	g.add_edge_weighted((6,7),Action::IncX).unwrap();
-	g.add_edge_weighted((7,5),Action::ReadY).unwrap();
-	g.add_edge_weighted((5,6),Action::Skip).unwrap();
-	g.add_edge_weighted((5,1),Action::Skip).unwrap();
+	g.add_edge_weighted((0,3,Action::DeclareX)).unwrap();
+	g.add_edge_weighted((3,2,Action::DeclareY)).unwrap();
+	g.add_edge_weighted((2,4,Action::YIsMinus1)).unwrap();
+	g.add_edge_weighted((4,5,Action::XIs0)).unwrap();
+	g.add_edge_weighted((6,7,Action::IncX)).unwrap();
+	g.add_edge_weighted((7,5,Action::ReadY)).unwrap();
+	g.add_edge_weighted((5,6,Action::Skip)).unwrap();
+	g.add_edge_weighted((5,1,Action::Skip)).unwrap();
 	
 	let mut initial: HashMap<u32,StringSignTFSpace> = HashMap::new();
 	initial.insert(0, StringSignTFSpace::bottom());
@@ -217,10 +221,12 @@ impl SubLattice<U64> for D32
 
 struct U64Analysis{}
 
-impl<G,L> Analysis<G,L> for U64Analysis
+impl<'a,G,L> Analysis<'a,G,L> for U64Analysis
 	where
-		G: EdgeWeightedGraph<EdgeWeight=u32>,
+		G: Graph<'a,EdgeWeight=u32>,
 		G::Vertex: Hash,
+		G::EdgeIter: IntoFromIter<(G::Vertex,G::Vertex,&'a G::EdgeWeight)>,
+		G::EdgeMutIter: IntoFromIter<(G::Vertex,G::Vertex,&'a mut G::EdgeWeight)>,
 		L: Bottom + SubLattice<U64> + SubLattice<U32>,
 {
 	type Lattice = U64;
@@ -243,13 +249,13 @@ fn solve_test_dependent()
 	let mut map = HashMap::new();
 	map.insert(0, D32(U64(0),U32(1)));
 	
-	let mut program = AdjListGraph::empty_graph();
+	let mut program = AdjListGraph::<_,(),_>::new();
 	program.add_vertex(0).unwrap();
 	program.add_vertex(1).unwrap();
 	program.add_vertex(2).unwrap();
 	
-	program.add_edge_weighted((0, 1), 1).unwrap();
-	program.add_edge_weighted((1, 2), 2).unwrap();
+	program.add_edge_weighted((0, 1, 1)).unwrap();
+	program.add_edge_weighted((1, 2, 2)).unwrap();
 	
 	U32Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
 	U64Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
