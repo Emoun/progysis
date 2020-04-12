@@ -1,5 +1,5 @@
 
-use ::core::{
+use crate::core::{
 	CompleteLattice, Bottom
 };
 use std::{

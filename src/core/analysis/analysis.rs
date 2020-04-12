@@ -1,5 +1,5 @@
 
-use core::{
+use crate::core::{
 	CompleteLattice, SubLattice, Worklist, Bottom
 };
 use graphene::{
@@ -13,11 +13,12 @@ use std::{
 	},
 	hash::Hash
 };
+use graphene::core::Directed;
 
-pub trait Analysis<'a,G,L>
+pub trait Analysis<G,L>
 	where
 		Self: Sized,
-		G: Graph<'a>,
+		G: Graph<Directedness=Directed>,
 		G::Vertex: Hash,
 		L: Bottom + SubLattice<Self::Lattice>
 {
@@ -29,9 +30,9 @@ pub trait Analysis<'a,G,L>
 		-> Self::Lattice
 	;
 	
-	fn analyze<W>(g: &'a G, initial_values: &mut HashMap<G::Vertex,L>)
+	fn analyze<W>(g: &G, initial_values: &mut HashMap<G::Vertex,L>)
 		where
-			W: Worklist<'a,G>
+			W: Worklist<G>
 	{
 		let mut worklist = W::initialize::<Self,_>(g);
 		
@@ -61,11 +62,11 @@ pub trait Analysis<'a,G,L>
 // Helper functions
 
 /// The flow variables that depend on the given flow variable.
-fn fv_dependentants<'a,N,L,G>(g: &'a G, fv: G::Vertex) -> Vec<(G::Vertex, &'a G::EdgeWeight)>
+fn fv_dependentants<N,L,G>(g: &G, fv: G::Vertex) -> Vec<(G::Vertex, &G::EdgeWeight)>
 	where
-		G: Graph<'a>,
+		G: Graph<Directedness=Directed>,
 		G::Vertex: Hash,
-		N: Analysis<'a,G,L>,
+		N: Analysis<G,L>,
 		L: Bottom + SubLattice<N::Lattice>
 {
 	let result = if N::FORWARD {
@@ -77,9 +78,9 @@ fn fv_dependentants<'a,N,L,G>(g: &'a G, fv: G::Vertex) -> Vec<(G::Vertex, &'a G:
 }
 
 /// The flow variables the given flow variable is dependent on.
-fn fv_dependencies<'a,G>(g: &'a G, fv: G::Vertex, forward: bool) -> Vec<(G::Vertex, &'a G::EdgeWeight)>
+fn fv_dependencies<G>(g: &G, fv: G::Vertex, forward: bool) -> Vec<(G::Vertex, &G::EdgeWeight)>
 	where
-		G: Graph<'a>,
+		G: Graph<Directedness=Directed>,
 		G::Vertex: Hash,
 {
 	
@@ -92,12 +93,12 @@ fn fv_dependencies<'a,G>(g: &'a G, fv: G::Vertex, forward: bool) -> Vec<(G::Vert
 	}
 }
 
-fn evaluate_flow_variable<'a,N,Nl,L,G>(g: &'a G, fv: G::Vertex, values: &HashMap<G::Vertex,L>)
+fn evaluate_flow_variable<N,Nl,L,G>(g: &G, fv: G::Vertex, values: &HashMap<G::Vertex,L>)
 							   -> N::Lattice
 	where
-		G: Graph<'a>,
+		G: Graph<Directedness=Directed>,
 		G::Vertex: Hash,
-		N: Analysis<'a,G,L,Lattice=Nl>,
+		N: Analysis<G,L,Lattice=Nl>,
 		Nl: CompleteLattice, // Used to circumvent this problem: https://stackoverflow.com/questions/50660911
 		L: Bottom + SubLattice<N::Lattice>
 

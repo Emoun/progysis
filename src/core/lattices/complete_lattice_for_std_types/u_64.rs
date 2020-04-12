@@ -1,5 +1,5 @@
 
-use ::core::{CompleteLattice, Bottom};
+use crate::core::{CompleteLattice, Bottom};
 use std::{
 	ops::{
 		Add, AddAssign

@@ -3,24 +3,22 @@ use std::{
 	vec::Vec,
 	hash::Hash,
 };
-use core::{
+use crate::core::{
 	Worklist, Analysis, SubLattice, Bottom
 };
-use graphene::core::{
-	Graph,
-};
+use graphene::core::{Graph, Directed};
 
-pub struct FifoWorklist<'a,G>
+pub struct FifoWorklist<G>
 	where
-		G: Graph<'a>,
+		G: Graph<Directedness=Directed>,
 		G::Vertex: Hash,
 {
 	list: Vec<G::Vertex>
 }
 
-impl<'a,G> Worklist<'a,G> for FifoWorklist<'a,G>
+impl<G> Worklist<G> for FifoWorklist<G>
 	where
-		G: Graph<'a>,
+		G: Graph<Directedness=Directed>,
 		G::Vertex: Hash,
 {
 	fn insert(&mut self, v: G::Vertex)
@@ -30,7 +28,7 @@ impl<'a,G> Worklist<'a,G> for FifoWorklist<'a,G>
 	
 	fn initialize<N,L>(g: &G) -> Self
 		where
-			N: Analysis<'a,G,L>,
+			N: Analysis<G,L>,
 			L: Bottom + SubLattice<N::Lattice>
 	{
 		let mut new = FifoWorklist{list: Vec::new()};
@@ -41,9 +39,9 @@ impl<'a,G> Worklist<'a,G> for FifoWorklist<'a,G>
 	}
 }
 
-impl<'a,G> Iterator for FifoWorklist<'a,G>
+impl<G> Iterator for FifoWorklist<G>
 	where
-		G: Graph<'a>,
+		G: Graph<Directedness=Directed>,
 		G::Vertex: Hash
 {
 	type Item = G::Vertex;

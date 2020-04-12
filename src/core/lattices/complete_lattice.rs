@@ -1,7 +1,7 @@
 use std::ops::{
 	Add, AddAssign
 };
-use core::Bottom;
+use crate::core::Bottom;
 
 ///
 /// A [Complete Lattice].

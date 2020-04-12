@@ -12,7 +12,7 @@ use progysis::{
 	common::lattices::{HashPowerSet},
 	core::{CompleteLattice},
 };
-use ::common::lattices::sign_power_set::Sign::*;
+use crate::common::lattices::sign_power_set::Sign::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Sign{

@@ -1,5 +1,5 @@
 
-use core::CompleteLattice;
+use crate::core::CompleteLattice;
 
 pub trait SubLattice<L>
 	where L: CompleteLattice

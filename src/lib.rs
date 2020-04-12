@@ -9,7 +9,6 @@
 //!
 //!
 //!
-extern crate graphene;
 
 #[macro_use]
 mod trait_alias;

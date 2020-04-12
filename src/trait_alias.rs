@@ -1,10 +1,7 @@
 
 ///
 ///
-///```
-///	#[macro_use]
-/// extern crate progyis;
-///
+///```///
 /// trait_alias!(ExAlias1: Copy, Eq, Clone);
 /// trait_alias!(ExAlias2: CompleteLattice);
 ///	trait_alias!(ExAlias3<K>: Clone, Iterator<Item=K> where K: ExAlias2);

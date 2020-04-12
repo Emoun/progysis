@@ -1,5 +1,5 @@
 
-use ::common::{
+use crate::common::{
 	lattices::{
 		Sign, SignPowerSet, StringSignTFSpace
 	}
@@ -12,8 +12,7 @@ use progysis::{
 };
 use graphene::{
 	core::{
-		Graph, ManualGraph,
-		trait_aliases::IntoFromIter
+		Graph
 	},
 	common::AdjListGraph
 };
@@ -23,15 +22,15 @@ use std::{
 	ops::{Add,AddAssign},
 	hash::Hash
 };
+use graphene::core::Directed;
+use graphene::core::property::{AddEdge, NewVertex};
 
 pub struct U32Analysis {}
 
-impl<'a,G,L> Analysis<'a,G,L> for U32Analysis
+impl<G,L> Analysis<G,L> for U32Analysis
 	where
-		G: Graph<'a,EdgeWeight=u32>,
+		G: Graph<Directedness=Directed, EdgeWeight=u32>,
 		G::Vertex: Hash,
-		G::EdgeIter: IntoFromIter<(G::Vertex,G::Vertex,&'a G::EdgeWeight)>,
-		G::EdgeMutIter: IntoFromIter<(G::Vertex,G::Vertex,&'a mut G::EdgeWeight)>,
 		L: Bottom + SubLattice<U32>
 {
 	type Lattice = U32;
@@ -46,22 +45,23 @@ impl<'a,G,L> Analysis<'a,G,L> for U32Analysis
 #[test]
 fn solve_test()
 {
+	
+	
+	let mut program = AdjListGraph::<(),_>::new();
+	let v0 = program.new_vertex().unwrap();
+	let v1 = program.new_vertex().unwrap();
+	let v2 = program.new_vertex().unwrap();
+	
+	program.add_edge_weighted((v0,v1,1)).unwrap();
+	program.add_edge_weighted((v1,v2,2)).unwrap();
+	
 	let mut map = HashMap::new();
-	map.insert(0, U32(1));
-	
-	let mut program = AdjListGraph::<_,(),_>::new();
-	program.add_vertex(0).unwrap();
-	program.add_vertex(1).unwrap();
-	program.add_vertex(2).unwrap();
-	
-	program.add_edge_weighted((0,1,1)).unwrap();
-	program.add_edge_weighted((1,2,2)).unwrap();
-	
+	map.insert(v0, U32(1));
 	U32Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
 	
-	assert_eq!(U32(1), map[&0]);
-	assert_eq!(U32(2), map[&1]);
-	assert_eq!(U32(4), map[&2]);
+	assert_eq!(U32(1), map[&v0]);
+	assert_eq!(U32(2), map[&v1]);
+	assert_eq!(U32(4), map[&v2]);
 }
 
 enum Action{
@@ -75,16 +75,12 @@ enum Action{
 }
 
 struct SignAnalysis<'a>
-{
-	pha: PhantomData<&'a u8>
-}
+{pha: PhantomData<&'a ()>}
 
-impl<'a,G,L> Analysis<'a,G,L> for SignAnalysis<'a>
+impl<'a, G,L> Analysis<G,L> for SignAnalysis<'a>
 	where
-		G: Graph<'a,EdgeWeight=Action>,
+		G: Graph<Directedness=Directed, EdgeWeight=Action>,
 		G::Vertex: Hash,
-		G::EdgeIter: IntoFromIter<(G::Vertex,G::Vertex,&'a G::EdgeWeight)>,
-		G::EdgeMutIter: IntoFromIter<(G::Vertex,G::Vertex,&'a mut G::EdgeWeight)>,
 		L: Bottom + SubLattice<StringSignTFSpace<'a>>
 {
 	type Lattice = StringSignTFSpace<'a>;
@@ -139,21 +135,22 @@ impl<'a,G,L> Analysis<'a,G,L> for SignAnalysis<'a>
 fn solve_tf_space()
 {
 	use self::Sign::*;
-	let mut g = AdjListGraph::<u32,(), Action>::new();
-	for i in 0..8{
-		g.add_vertex(i).unwrap();
+	let mut g = AdjListGraph::<(), Action>::new();
+	let mut verts = Vec::new();
+	for _ in 0..8{
+		verts.push(g.new_vertex().unwrap());
 	}
-	g.add_edge_weighted((0,3,Action::DeclareX)).unwrap();
-	g.add_edge_weighted((3,2,Action::DeclareY)).unwrap();
-	g.add_edge_weighted((2,4,Action::YIsMinus1)).unwrap();
-	g.add_edge_weighted((4,5,Action::XIs0)).unwrap();
-	g.add_edge_weighted((6,7,Action::IncX)).unwrap();
-	g.add_edge_weighted((7,5,Action::ReadY)).unwrap();
-	g.add_edge_weighted((5,6,Action::Skip)).unwrap();
-	g.add_edge_weighted((5,1,Action::Skip)).unwrap();
+	g.add_edge_weighted((verts[0],verts[3],Action::DeclareX)).unwrap();
+	g.add_edge_weighted((verts[3],verts[2],Action::DeclareY)).unwrap();
+	g.add_edge_weighted((verts[2],verts[4],Action::YIsMinus1)).unwrap();
+	g.add_edge_weighted((verts[4],verts[5],Action::XIs0)).unwrap();
+	g.add_edge_weighted((verts[6],verts[7],Action::IncX)).unwrap();
+	g.add_edge_weighted((verts[7],verts[5],Action::ReadY)).unwrap();
+	g.add_edge_weighted((verts[5],verts[6],Action::Skip)).unwrap();
+	g.add_edge_weighted((verts[5],verts[1],Action::Skip)).unwrap();
 	
-	let mut initial: HashMap<u32,StringSignTFSpace> = HashMap::new();
-	initial.insert(0, StringSignTFSpace::bottom());
+	let mut initial: HashMap<_,StringSignTFSpace> = HashMap::new();
+	initial.insert(verts[0], StringSignTFSpace::bottom());
 	
 	SignAnalysis::analyze::<FifoWorklist<_>>(&g, &mut initial);
 	
@@ -221,12 +218,10 @@ impl SubLattice<U64> for D32
 
 struct U64Analysis{}
 
-impl<'a,G,L> Analysis<'a,G,L> for U64Analysis
+impl<G,L> Analysis<G,L> for U64Analysis
 	where
-		G: Graph<'a,EdgeWeight=u32>,
+		G: Graph<Directedness=Directed, EdgeWeight=u32>,
 		G::Vertex: Hash,
-		G::EdgeIter: IntoFromIter<(G::Vertex,G::Vertex,&'a G::EdgeWeight)>,
-		G::EdgeMutIter: IntoFromIter<(G::Vertex,G::Vertex,&'a mut G::EdgeWeight)>,
 		L: Bottom + SubLattice<U64> + SubLattice<U32>,
 {
 	type Lattice = U64;
@@ -246,22 +241,23 @@ impl<'a,G,L> Analysis<'a,G,L> for U64Analysis
 #[test]
 fn solve_test_dependent()
 {
+	
+	let mut program = AdjListGraph::<(),_>::new();
+	let v0 = program.new_vertex().unwrap();
+	let v1 = program.new_vertex().unwrap();
+	let v2 = program.new_vertex().unwrap();
+	
+	program.add_edge_weighted((v0, v1, 1)).unwrap();
+	program.add_edge_weighted((v1, v2, 2)).unwrap();
+	
+	
 	let mut map = HashMap::new();
-	map.insert(0, D32(U64(0),U32(1)));
-	
-	let mut program = AdjListGraph::<_,(),_>::new();
-	program.add_vertex(0).unwrap();
-	program.add_vertex(1).unwrap();
-	program.add_vertex(2).unwrap();
-	
-	program.add_edge_weighted((0, 1, 1)).unwrap();
-	program.add_edge_weighted((1, 2, 2)).unwrap();
-	
+	map.insert(v0, D32(U64(0),U32(1)));
 	U32Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
 	U64Analysis::analyze::<FifoWorklist<_>>(&program, &mut map);
 	
-	assert_eq!(D32(U64(0),U32(1)), map[&0]);
-	assert_eq!(D32(U64(3),U32(2)), map[&1]);
-	assert_eq!(D32(U64(9),U32(4)), map[&2]);
+	assert_eq!(D32(U64(0),U32(1)), map[&v0]);
+	assert_eq!(D32(U64(3),U32(2)), map[&v1]);
+	assert_eq!(D32(U64(9),U32(4)), map[&v2]);
 	
 }

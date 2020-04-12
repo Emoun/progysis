@@ -5,7 +5,7 @@ use progysis::common::lattices::{
 	HashTFSpace, HashPowerSet
 };
 
-pub type StringSignTFSpace<'a> = HashTFSpace<'a, &'a str, SignPowerSet>;
+pub type StringSignTFSpace<'a> = HashTFSpace<&'a str, SignPowerSet>;
 
 #[test]
 fn initialization_test(){

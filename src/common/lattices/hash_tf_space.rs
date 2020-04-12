@@ -9,9 +9,8 @@ use std::{
 		Index, IndexMut, Add, AddAssign
 	},
 	cmp::Ordering,
-	marker::PhantomData,
 };
-use core::{
+use crate::core::{
 	CompleteLattice, Bottom, TFSpace, TFSpaceKey, TFSpaceElement
 };
 
@@ -19,19 +18,18 @@ trait_alias!(HashTFSpaceKey: TFSpaceKey, Hash);
 trait_alias!(HashTFSpaceElement: TFSpaceElement);
 
 #[derive(Clone, Debug)]
-pub struct HashTFSpace<'a,K,E>
+pub struct HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
 {
 	map: HashMap<K,E>,
-	a: PhantomData<&'a i8>
 }
 
-impl<'a,K,E> TFSpace<'a,K,E> for HashTFSpace<'a,K,E>
+impl<K,E> TFSpace<K,E> for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
-		E: 'a + HashTFSpaceElement
+		E: HashTFSpaceElement
 {
 	type Keys = IntoIter<K>;
 	
@@ -40,7 +38,7 @@ impl<'a,K,E> TFSpace<'a,K,E> for HashTFSpace<'a,K,E>
 	}
 }
 
-impl<'a,K,E> CompleteLattice for HashTFSpace<'a,K,E>
+impl<K,E> CompleteLattice for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -52,18 +50,18 @@ impl<'a,K,E> CompleteLattice for HashTFSpace<'a,K,E>
 	
 }
 
-impl<'a,K,E> Bottom for HashTFSpace<'a,K,E>
+impl<K,E> Bottom for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
 {
 	fn bottom() -> Self
 	{
-		Self{map: HashMap::new(), a:PhantomData}
+		Self{map: HashMap::new()}
 	}
 }
 
-impl<'a,K,E> PartialOrd for HashTFSpace<'a,K,E>
+impl<K,E> PartialOrd for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -111,7 +109,7 @@ impl<'a,K,E> PartialOrd for HashTFSpace<'a,K,E>
 	}
 }
 
-impl<'a,K,E> PartialEq for HashTFSpace<'a,K,E>
+impl<K,E> PartialEq for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -145,7 +143,7 @@ impl<'a,K,E> PartialEq for HashTFSpace<'a,K,E>
 	}
 }
 
-impl<'a,K,E> Add<Self> for HashTFSpace<'a,K,E>
+impl<K,E> Add<Self> for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -159,21 +157,21 @@ impl<'a,K,E> Add<Self> for HashTFSpace<'a,K,E>
 	}
 }
 
-impl<'a,'b,K,E> Add<&'b Self> for HashTFSpace<'a,K,E>
+impl<K,E> Add<&Self> for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
 {
 	type Output = Self;
 	
-	fn add(mut self, other: &'b Self) -> Self::Output
+	fn add(mut self, other: &Self) -> Self::Output
 	{
 		join(&mut self, other);
 		self
 	}
 }
 
-impl<'a,K,E> AddAssign for HashTFSpace<'a,K,E>
+impl<K,E> AddAssign for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -184,18 +182,18 @@ impl<'a,K,E> AddAssign for HashTFSpace<'a,K,E>
 	}
 }
 
-impl<'a,'b,K,E> AddAssign<&'b Self> for HashTFSpace<'a,K,E>
+impl<K,E> AddAssign<&Self> for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
 {
-	fn add_assign(&mut self, other: &'b Self)
+	fn add_assign(&mut self, other: &Self)
 	{
 		join(self, other);
 	}
 }
 
-impl<'a,K,E> Index<K> for HashTFSpace<'a,K,E>
+impl<K,E> Index<K> for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -208,7 +206,7 @@ impl<'a,K,E> Index<K> for HashTFSpace<'a,K,E>
 	}
 }
 
-impl<'a,K,E> IndexMut<K> for HashTFSpace<'a,K,E>
+impl<K,E> IndexMut<K> for HashTFSpace<K,E>
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -225,7 +223,7 @@ impl<'a,K,E> IndexMut<K> for HashTFSpace<'a,K,E>
 
 // Helper functions
 
-fn join<'a,K,E>(left: &mut  HashTFSpace<'a,K,E>, right:&HashTFSpace<'a,K,E>)
+fn join<K,E>(left: &mut  HashTFSpace<K,E>, right:&HashTFSpace<K,E>)
 	where
 		K: HashTFSpaceKey,
 		E: HashTFSpaceElement
@@ -251,10 +249,10 @@ fn join<'a,K,E>(left: &mut  HashTFSpace<'a,K,E>, right:&HashTFSpace<'a,K,E>)
 /// If 'l' has key that isn't in 'r', 'd1' must hold for 'l's value
 /// If 'r' has key that isn't in 'l', 'd2' must hold for 'r's value
 ///
-fn for_each_pair<'a,K,E,F,D1,D2>(l: &HashTFSpace<'a,K,E>, r: &HashTFSpace<'a,K,E>, f: F, d1: D1, d2: D2) -> bool
+fn for_each_pair<K,E,F,D1,D2>(l: &HashTFSpace<K,E>, r: &HashTFSpace<K,E>, f: F, d1: D1, d2: D2) -> bool
 	where
-		K: 'a + HashTFSpaceKey,
-		E: 'a + HashTFSpaceElement,
+		K: HashTFSpaceKey,
+		E: HashTFSpaceElement,
 		F: Fn(&E,&E) -> bool,
 		D1: Fn(&E) -> bool,
 		D2: Fn(&E) -> bool

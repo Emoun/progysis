@@ -1,5 +1,5 @@
 
-use ::core::{CompleteLattice};
+use crate::core::{CompleteLattice};
 
 trait_alias!{PowerSetItem: Clone, Eq}
 

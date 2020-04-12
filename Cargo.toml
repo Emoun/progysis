@@ -2,6 +2,7 @@
 name = "progysis"
 version = "0.1.0"
 authors = ["Emad"]
+edition = "2018"
 
 [dependencies]
-graphene = {git = "http://github.com/Emoun/graphene", branch = "weighted_redesign"}
+graphene = {git = "http://github.com/Emoun/graphene"}

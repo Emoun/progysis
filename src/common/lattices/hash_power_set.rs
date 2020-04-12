@@ -10,7 +10,7 @@ use std::{
 		Add,AddAssign
 	}
 };
-use core::{
+use crate::core::{
 	CompleteLattice, PowerSet, PowerSetItem, Bottom
 };
 

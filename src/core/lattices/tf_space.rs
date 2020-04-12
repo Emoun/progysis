@@ -23,10 +23,10 @@ trait_alias!(TFSpaceElement: CompleteLattice);
 /// * Index
 /// * IndexMut: Must not fail. If an index is present in the object it should be added.
 ///
-pub trait TFSpace<'a,K,E>: CompleteLattice + Index<K, Output=E> + IndexMut<K>
+pub trait TFSpace<K,E>: CompleteLattice + Index<K, Output=E> + IndexMut<K>
 	where
 		K: TFSpaceKey,
-		E: 'a + TFSpaceElement
+		E: TFSpaceElement
 {
 	type Keys: Iterator<Item=K>;
 	
